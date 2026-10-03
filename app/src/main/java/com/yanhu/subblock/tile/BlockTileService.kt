@@ -7,7 +7,9 @@ import android.provider.Settings
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
 import androidx.annotation.RequiresApi
+import com.yanhu.subblock.AppLocale
 import com.yanhu.subblock.MainActivity
+import com.yanhu.subblock.R
 import com.yanhu.subblock.data.SettingsStore
 import com.yanhu.subblock.overlay.OverlayService
 import kotlinx.coroutines.flow.first
@@ -26,6 +28,9 @@ import kotlinx.coroutines.runBlocking
 class BlockTileService : TileService() {
 
     private val store by lazy { SettingsStore(this) }
+
+    /** 磁贴运行在系统进程语境里，取文案要走"带当前语言"的 Context */
+    private val uiContext by lazy { AppLocale.wrap(this) }
 
     override fun onStartListening() {
         super.onStartListening()
@@ -61,7 +66,7 @@ class BlockTileService : TileService() {
     private fun syncTile(on: Boolean) {
         qsTile?.apply {
             state = if (on) Tile.STATE_ACTIVE else Tile.STATE_INACTIVE
-            label = "遮幕"
+            label = uiContext.getString(R.string.app_name)
             updateTile()
         }
     }

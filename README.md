@@ -27,8 +27,11 @@
 | 能力 | 说明 |
 |---|---|
 | **多块遮挡** | 同时存在多块遮挡区域，例如底部字幕与顶部弹幕一起盖 |
+| **5 种遮挡样式** | 实心色块、毛玻璃模糊、渐变羽化、斜纹、点阵。样式只影响观感，位置与数据完全通用 |
 | **毛玻璃模糊** | Android 12+ 可用模糊模式，比一块死黑体面得多；低版本自动回退为半透明色块 |
-| **实时预览** | 编辑面板内模拟一块屏幕与假字幕，调颜色透明度不必来回切屏幕 |
+| **自选颜色** | 内置色板之外，可用 HSV 取色器任意挑色，或直接粘贴十六进制色号 |
+| **中英双语** | 默认英文 + 简体中文，应用内一键切换，无需重启（会立即重建界面） |
+| **实时预览** | 编辑面板内模拟一块屏幕与假字幕，调颜色透明度不必来回切屏幕；预览与真实悬浮窗**共用同一份绘制代码** |
 | **6 套预设模板** | 抖音底部、B站弹幕、追剧双挡等，点一下自动摆好位置 |
 | **下拉磁贴** | 控制中心一键开关，不必打开应用 |
 | **配置导入 / 导出** | 全部遮挡区域导出成一个 JSON 文件，换手机、重装或误删后一键恢复。用系统文件选择器读写，**不申请任何存储权限**，文件存到哪里由你决定 |
@@ -135,24 +138,32 @@ maven { url = uri("https://maven.aliyun.com/repository/google") }
 
 ```
 app/src/main/java/com/yanhu/subblock/
-├── MainActivity.kt              应用入口，负责权限引导与页面切换
+├── MainActivity.kt              应用入口，负责权限引导、页面切换与语言注入
+├── AppLocale.kt                 语言选择：在 attachBaseContext 里注入语言
 ├── BootReceiver.kt              开机自启后恢复遮挡状态
 ├── data/
 │   ├── BlockConfig.kt           单个遮挡块的数据模型（位置尺寸存 0~1 比例）
 │   ├── SettingsStore.kt         DataStore 仓库 —— 全应用唯一的数据源头
 │   ├── ConfigIO.kt              配置导入 / 导出：序列化、格式识别与边界收敛
-│   └── Presets.kt               预设模板
+│   └── Presets.kt               预设模板（只存资源 id，按当前语言生成）
 ├── overlay/
 │   ├── OverlayService.kt        前台服务：把数据渲染成屏幕上的悬浮窗
+│   ├── BlockRenderer.kt         五种遮挡样式的绘制（悬浮窗与预览共用同一份）
 │   ├── BlockView.kt             一块遮挡区域的自绘 View 与手势逻辑
 │   └── OverlayStatus.kt         服务运行状态与错误原因的上报通道
 ├── tile/BlockTileService.kt     控制中心磁贴
 └── ui/
-    ├── HomeScreen.kt            首页：总开关 + 遮挡块列表 + 预设入口
+    ├── HomeScreen.kt            首页：总开关 + 遮挡块列表 + 语言 + 备份
     ├── BlockEditorSheet.kt      遮挡块编辑面板（含实时预览）
+    ├── ColorPickerDialog.kt     自绘 HSV 取色器（零依赖）
     ├── PresetSheet.kt           模板选择面板
     ├── AboutScreen.kt           关于页：版本、作者声明、隐私承诺、源码链接
+    ├── UiStrings.kt             数据层"类型"到界面文字的翻译层
     └── theme/Theme.kt           Material 3 主题与动态取色
+
+app/src/main/res/
+├── values/strings.xml           默认语言：英文
+└── values-zh/strings.xml        简体中文
 ```
 
 ## 架构：只有一个数据源头
@@ -200,8 +211,9 @@ app/src/main/java/com/yanhu/subblock/
 - [x] v1.0 — 多块遮挡、毛玻璃、预设模板、磁贴
 - [x] v1.1 — 关于页与作者声明、开源配套、Gradle Wrapper
 - [x] v1.2 — 配置导入 / 导出（换机不丢配置）
-- [ ] v1.3 — 单元测试与 GitHub Actions 持续集成
-- [ ] v1.3 — 按应用自动生效（只在指定 App 内显示遮挡）
+- [x] v1.3 — 5 种遮挡样式、自选颜色、中英双语
+- [ ] v1.4 — 单元测试与 GitHub Actions 持续集成
+- [ ] v1.4 — 按应用自动生效（只在指定 App 内显示遮挡）
 - [ ] 长期 — 争取收录进 F-Droid
 
 ## 开源协议
@@ -226,9 +238,13 @@ over video subtitles and danmaku. Built with Kotlin and Jetpack Compose.
 ## Features
 
 - **Multiple overlay blocks** — cover bottom subtitles and top danmaku at the same time
+- **Five mask styles** — solid color, blur behind, soft gradient, diagonal stripes and dot grid
 - **Blur mode** — frosted-glass effect on Android 12+; automatically falls back to a
   translucent solid color on older devices
-- **Live preview** — edit colors and opacity against a mock screen, no app switching
+- **Custom colors** — pick any color with the built-in HSV picker, or paste a hex code
+- **Bilingual UI** — English and Simplified Chinese, switchable in-app and applied instantly
+- **Live preview** — edit colors and opacity against a mock screen, no app switching.
+  The preview and the real overlay **share the exact same drawing code**
 - **Presets** — one tap to place overlays for common apps such as TikTok or Bilibili
 - **Quick Settings tile** — toggle without opening the app
 - **Config import / export** — export all overlays to a single JSON file and restore them

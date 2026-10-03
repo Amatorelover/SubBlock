@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  简体中文。键名必须与 values/strings.xml 完全一致：
+  任何一边缺了键，对应文字会"静默回退"到另一种语言，
+  那种一半中文一半英文的界面就是这么来的。
+-->
+<resources>
+    <string name="app_name">遮幕</string>
+
+    <!-- ============================ 首页 ============================ -->
+    <string name="cd_about">关于</string>
+    <string name="master_on_title">遮挡已开启</string>
+    <string name="master_on_sub">下拉通知栏磁贴也能一键开关</string>
+    <string name="master_off_title">遮挡已关闭</string>
+    <string name="master_off_sub">打开后遮挡块会立即出现在屏幕上</string>
+
+    <plurals name="masks_on_screen">
+        <item quantity="other">服务运行中 · %1$d 块遮挡已上屏</item>
+    </plurals>
+    <string name="service_waiting">服务运行中 · 等待遮挡块上屏…</string>
+
+    <string name="permission_title">还差一步：悬浮窗权限</string>
+    <string name="permission_body">遮挡块本质上是系统级悬浮窗，必须由你手动授权。打开后找到「遮幕」，把开关打开即可。</string>
+    <string name="permission_grant">去授权</string>
+    <string name="permission_app_settings">应用设置</string>
+
+    <string name="section_masks">遮挡区域</string>
+    <plurals name="mask_count">
+        <item quantity="other">%1$d 块</item>
+    </plurals>
+
+    <string name="empty_title">还没有遮挡区域</string>
+    <string name="empty_body">点「新建一块」从零开始，或直接套用一个预设模板。</string>
+    <string name="action_new_mask">新建一块</string>
+    <string name="action_use_preset">用预设模板</string>
+
+    <string name="block_default_name">遮挡块</string>
+    <string name="new_mask_name">遮挡块 %1$d</string>
+    <string name="cd_locked">已锁定</string>
+    <string name="cd_delete">删除</string>
+    <string name="block_meta">%1$s · %2$d%% 不透明</string>
+
+    <string name="mode_solid">实心色块</string>
+    <string name="mode_blur">毛玻璃模糊</string>
+    <string name="mode_feather">渐变羽化</string>
+    <string name="mode_stripes">斜纹</string>
+    <string name="mode_dots">点阵</string>
+
+    <string name="gestures_title">屏幕上怎么操作</string>
+    <string name="gesture_move">按住拖动 = 移动</string>
+    <string name="gesture_resize">右下角手柄 = 缩放</string>
+    <string name="gesture_lock">双击 = 锁定</string>
+    <string name="gesture_edit">长按 = 回到这里编辑</string>
+    <string name="gesture_hint_autostart">提示：如果遮挡块在重启后消失，把「遮幕」加入系统的自启动白名单即可。</string>
+    <string name="gesture_hint_permission">先完成上面的悬浮窗授权，手势才能生效。</string>
+
+    <string name="backup_title">配置备份</string>
+    <string name="backup_body">把 %1$d 块遮挡区域导出成一个 JSON 文件。换手机、重装或误删之后，用它一键恢复。文件存到哪里由你决定，全程不经过任何服务器。</string>
+    <string name="backup_export">导出</string>
+    <string name="backup_import">导入</string>
+
+    <string name="language_title">语言</string>
+    <string name="language_system">跟随系统</string>
+    <string name="language_zh">简体中文</string>
+    <string name="language_en">English</string>
+    <string name="language_hint">切换后应用会立即重新加载。</string>
+
+    <string name="import_title">导入这份配置？</string>
+    <string name="import_body">文件里有 %1$d 块遮挡区域，将替换当前的 %2$d 块。总开关状态不受影响。</string>
+    <string name="import_overwrite_hint">当前 %1$d 块会被覆盖。想留个底，可以先「导出」再导入。</string>
+    <string name="import_confirm">导入并替换</string>
+    <string name="action_cancel">取消</string>
+
+    <!-- Toast 提示 -->
+    <string name="toast_exported">已导出 %1$d 块遮挡区域</string>
+    <string name="toast_export_failed">导出失败，换一个位置再试</string>
+    <string name="toast_read_failed">读取文件失败</string>
+    <string name="toast_no_file_picker">无法打开文件选择器</string>
+    <string name="toast_imported">已导入 %1$d 块遮挡区域</string>
+    <string name="toast_deleted">已删除「%1$s」</string>
+    <string name="toast_added_preset">已添加「%1$s」</string>
+
+    <!-- ========================== 编辑面板 ========================== -->
+    <string name="editor_title">编辑遮挡块</string>
+    <string name="label_name">名称</string>
+    <string name="label_mode">遮挡方式</string>
+    <string name="preview_demo_subtitle">原本这里有一行碍事的字幕</string>
+    <string name="blur_hint">毛玻璃需要 Android 12 以上；旧系统会自动退化为半透明色块，遮挡依然有效。</string>
+    <string name="label_color">颜色</string>
+    <string name="color_custom">自定义</string>
+    <string name="label_alpha">不透明度</string>
+    <string name="label_blur_strength">模糊强度</string>
+    <string name="label_corner">圆角</string>
+    <string name="section_quick_position">快速定位</string>
+    <string name="quick_bottom">底部字幕</string>
+    <string name="quick_center">居中</string>
+    <string name="quick_top">顶部</string>
+    <string name="quick_full">铺满全屏</string>
+    <string name="label_lock">锁定位置</string>
+    <string name="lock_hint">锁定后拖不动，避免看视频时手滑移位</string>
+    <string name="action_delete_mask">删除这一块</string>
+
+    <!-- =========================== 取色器 =========================== -->
+    <string name="picker_title">选择颜色</string>
+    <string name="picker_hex">十六进制</string>
+    <string name="picker_hue">色相</string>
+    <string name="picker_area_hint">在方框内拖动，调整饱和度与明度</string>
+    <string name="action_ok">确定</string>
+
+    <!-- ========================== 预设模板 ========================== -->
+    <string name="preset_sheet_title">预设模板</string>
+    <string name="preset_sheet_sub">套用后可以继续手动微调位置和颜色。</string>
+
+    <string name="preset_short_name">短视频底部字幕</string>
+    <string name="preset_short_desc">抖音 / 快手 / TikTok / 小红书 的硬字幕</string>
+    <string name="preset_top_name">顶部弹幕</string>
+    <string name="preset_top_desc">B站 / 直播 顶部飘过的弹幕区</string>
+    <string name="preset_both_name">底部字幕 + 顶部弹幕</string>
+    <string name="preset_both_desc">追剧最常用：上下一起挡住</string>
+    <string name="preset_center_name">居中大字幕</string>
+    <string name="preset_center_desc">外语片 / 纪录片常见的画面中央字幕</string>
+    <string name="preset_right_name">短视频右侧按钮</string>
+    <string name="preset_right_desc">挡住点赞 / 评论 / 分享那一列图标</string>
+    <string name="preset_full_name">竖屏底部全宽</string>
+    <string name="preset_full_desc">最省事的兜底方案：底部一整条全盖</string>
+
+    <string name="block_name_short_sub">短视频字幕</string>
+    <string name="block_name_top_danmaku">顶部弹幕</string>
+    <string name="block_name_bottom_sub">底部字幕</string>
+    <string name="block_name_center_sub">中央字幕</string>
+    <string name="block_name_right_buttons">右侧按钮</string>
+    <string name="block_name_bottom_full">底部全宽</string>
+
+    <!-- =========================== 关于页 =========================== -->
+    <string name="about_title">关于</string>
+    <string name="cd_back">返回</string>
+    <string name="about_tagline">把视频里的硬字幕盖掉</string>
+    <string name="about_label_version">版本</string>
+    <string name="about_label_author">作者</string>
+    <string name="about_label_license">协议</string>
+    <string name="about_label_android">Android</string>
+
+    <string name="about_section_author">作者声明</string>
+    <string name="about_author_p1">「遮幕」诞生于一个很朴素的需求：看视频时不想被画面上烧死的字幕挡住画面，而能找到的同类工具要么年久失修，要么只允许一块固定区域。于是我自己写了一个。</string>
+    <string name="about_author_p2">它只做一件事：在你指定的位置盖一层遮挡。它不读取屏幕内容、不做文字识别、不修改也不下载任何视频。</string>
+    <string name="about_author_p3">本项目以 MIT 协议开源，仅供个人学习与自用。使用者应自行确保使用方式符合当地法律法规及相关服务的使用条款，因使用本软件产生的后果由使用者自行承担。</string>
+
+    <string name="about_section_privacy">隐私承诺</string>
+    <string name="about_privacy_1">不申请联网权限——可自行核对 AndroidManifest.xml，其中没有 INTERNET</string>
+    <string name="about_privacy_2">不收集任何数据：没有统计、没有埋点、没有广告、没有账号</string>
+    <string name="about_privacy_3">所有配置只保存在你自己的手机上</string>
+
+    <string name="about_section_opensource">开源与源码</string>
+    <string name="about_opensource_body">代码全部公开，欢迎提 Issue 与 Pull Request：</string>
+    <string name="about_view_source">查看源码</string>
+    <string name="about_copy_version">复制版本信息</string>
+    <string name="about_version_line">遮幕 v%1$s（%2$d）· Android %3$s（API %4$d）</string>
+
+    <string name="about_section_thanks">致谢</string>
+    <string name="about_thanks_body">本项目站在这些开源项目肩上：Kotlin 语言、Jetpack Compose 界面框架、AndroidX 与 Material Design 组件库。\n也感谢所有提出过建议与问题的人。</string>
+
+    <!-- ==================== 服务通知与状态 ==================== -->
+    <string name="notif_channel_name">遮挡服务</string>
+    <string name="notif_channel_desc">保持遮挡窗口在后台运行</string>
+    <string name="notif_title">遮幕运行中</string>
+    <string name="notif_text_empty">还没有放置遮挡块</string>
+    <string name="notif_text_count">正在遮挡 %1$d 块区域</string>
+    <string name="notif_action_disable">关闭遮挡</string>
+
+    <string name="service_err_no_permission">悬浮窗权限未开启，请回到应用授权</string>
+    <string name="service_err_add_view">创建悬浮窗失败：%1$s</string>
+    <string name="service_err_unknown">未知错误</string>
+    <string name="toast_locked">已锁定，双击可解锁</string>
+    <string name="toast_unlocked">已解锁，可以拖动</string>
+
+    <!-- ==================== 导入失败原因（ConfigIO） ==================== -->
+    <string name="import_err_empty">文件内容为空</string>
+    <string name="import_err_too_large">文件过大（超过 4MB），不像配置文件</string>
+    <string name="import_err_not_json">内容不是有效的 JSON 文本</string>
+    <string name="import_err_foreign_app">这份文件属于「%1$s」，不是遮幕的配置</string>
+    <string name="import_err_no_blocks_field">文件里找不到 blocks 字段，可能不是遮幕导出的配置</string>
+    <string name="import_err_top_level">JSON 顶层既不是对象也不是数组</string>
+    <string name="import_err_no_blocks">这份配置里没有任何遮挡区域</string>
+    <string name="import_err_all_unrecognized">文件里的条目都无法识别</string>
+
+    <!-- 自动修正提示 -->
+    <string name="import_warn_schema_newer">文件来自更新版本的遮幕（格式 v%1$d），部分设置可能无法识别</string>
+    <string name="import_warn_truncated">配置共 %1$d 块，超过上限 %2$d，只导入前 %2$d 块</string>
+    <string name="import_warn_skipped">忽略了 %1$d 个格式错误的条目</string>
+    <string name="import_warn_id">%1$d 块的 ID 重复，已重新分配</string>
+    <string name="import_warn_param">%1$d 块的参数超出合理范围，已自动校正</string>
+</resources>

@@ -16,12 +16,16 @@ import java.util.Locale
  *   - 内容可能是坏的、伪造的、来自别的 App —— 那是这一层的事
  * 混在一起写，报错时就分不清是"读失败"还是"内容不对"。
  *
+ * 同理，它也不产出任何**人类语言**：失败与警告都以"类型"返回
+ * （[Reason] / [Warning]），由界面层翻译成中文或英文。
+ * 否则加英文版时就得在这一层里塞 if-else 判断语言——那才是真正的坏味道。
+ *
  * 导出的 JSON 长这样（带元信息，便于识别、排错和将来升级格式）：
  * ```
  * {
  *   "app": "SubBlock",
  *   "schema": 1,
- *   "appVersion": "1.2.0",
+ *   "appVersion": "1.3.0",
  *   "exportedAt": "2026-10-03T16:10:00+0800",
  *   "enabled": true,
  *   "count": 3,
@@ -42,15 +46,30 @@ object ConfigIO {
 
     private const val MAX_NAME_LEN = 40
 
-    /** 导入结果：要么成功（可能附带若干条自动修正的说明），要么明确失败。 */
-    sealed interface ImportResult {
-        data class Success(
-            val blocks: List<BlockConfig>,
-            /** 自动修正过的地方。导入不是"照单全收"，纠正了什么必须让用户知道。 */
-            val warnings: List<String>
-        ) : ImportResult
+    /** 导入失败的原因（不含文字，由界面翻译） */
+    sealed interface Reason {
+        object EmptyFile : Reason
+        object TooLarge : Reason
+        object NotJson : Reason
+        data class ForeignApp(val app: String) : Reason
+        object NoBlocksField : Reason
+        object NotAContainer : Reason
+        object NoBlocks : Reason
+        object AllUnrecognized : Reason
+    }
 
-        data class Failure(val reason: String) : ImportResult
+    /** 导入过程中自动修正过的地方——必须让用户看见，不能悄悄改他的数据 */
+    sealed interface Warning {
+        data class SchemaNewer(val schema: Int) : Warning
+        data class Truncated(val total: Int, val max: Int) : Warning
+        data class Skipped(val count: Int) : Warning
+        data class IdFixed(val count: Int) : Warning
+        data class ParamFixed(val count: Int) : Warning
+    }
+
+    sealed interface ImportResult {
+        data class Success(val blocks: List<BlockConfig>, val warnings: List<Warning>) : ImportResult
+        data class Failure(val reason: Reason) : ImportResult
     }
 
     // ---------------------------------------------------------------- 导出
@@ -78,20 +97,22 @@ object ConfigIO {
     // ---------------------------------------------------------------- 导入
 
     /**
-     * 解析导入内容。**永远不抛异常**，所有异常路径都翻译成人话。
+     * 解析导入内容。**永远不抛异常**，所有异常路径都翻译成可翻译的"原因类型"。
      *
      * 校验分三层，缺一不可：
      *   1. 结构性：是不是合法 JSON？是不是遮幕导出的？
      *   2. 值域性：位置/透明度这些数字是否在合理区间？（外部输入一律不可信）
      *   3. 一致性：id 是否重复？块数是否超限？
+     *
+     * @param defaultName 名称为空时使用的兜底名（由界面层传入，已按当前语言翻译好）
      */
-    fun parse(raw: String): ImportResult {
+    fun parse(raw: String, defaultName: String): ImportResult {
         val text = raw.trim()
-        if (text.isEmpty()) return ImportResult.Failure("文件内容为空")
-        if (text.length > 4 * 1024 * 1024) return ImportResult.Failure("文件过大（超过 4MB），不像配置文件")
+        if (text.isEmpty()) return ImportResult.Failure(Reason.EmptyFile)
+        if (text.length > 4 * 1024 * 1024) return ImportResult.Failure(Reason.TooLarge)
 
         val value = runCatching { JSONTokener(text).nextValue() }.getOrNull()
-            ?: return ImportResult.Failure("内容不是有效的 JSON 文本")
+            ?: return ImportResult.Failure(Reason.NotJson)
 
         var schema = SCHEMA
         val blocksArray: JSONArray = when (val v = value) {
@@ -102,21 +123,21 @@ object ConfigIO {
             is JSONObject -> {
                 val tag = v.optString("app", "")
                 if (tag.isNotEmpty() && tag != APP_TAG) {
-                    return ImportResult.Failure("这份文件属于「$tag」，不是遮幕的配置")
+                    return ImportResult.Failure(Reason.ForeignApp(tag))
                 }
                 schema = v.optInt("schema", SCHEMA)
                 v.optJSONArray("blocks")
-                    ?: return ImportResult.Failure("文件里找不到 blocks 字段，可能不是遮幕导出的配置")
+                    ?: return ImportResult.Failure(Reason.NoBlocksField)
             }
 
-            else -> return ImportResult.Failure("JSON 顶层既不是对象也不是数组")
+            else -> return ImportResult.Failure(Reason.NotAContainer)
         }
 
         if (blocksArray.length() == 0) {
-            return ImportResult.Failure("这份配置里没有任何遮挡区域")
+            return ImportResult.Failure(Reason.NoBlocks)
         }
 
-        val warnings = mutableListOf<String>()
+        val warnings = mutableListOf<Warning>()
         val result = mutableListOf<BlockConfig>()
         val takenIds = mutableSetOf<String>()
 
@@ -136,7 +157,7 @@ object ConfigIO {
             }
 
             val original = BlockConfig.fromJson(obj)
-            val normalized = normalize(original, takenIds)
+            val normalized = normalize(original, takenIds, defaultName)
 
             if (normalized.id != original.id) idFixed++
             // 只比较除 id 之外的字段，避免与上面的 id 统计重复计数
@@ -146,18 +167,16 @@ object ConfigIO {
         }
 
         if (result.isEmpty()) {
-            return ImportResult.Failure("文件里的条目都无法识别")
+            return ImportResult.Failure(Reason.AllUnrecognized)
         }
 
-        if (schema > SCHEMA) {
-            warnings += "文件来自更新版本的遮幕（格式 v$schema），部分设置可能无法识别"
-        }
+        if (schema > SCHEMA) warnings += Warning.SchemaNewer(schema)
         if (blocksArray.length() > MAX_BLOCKS) {
-            warnings += "配置共 ${blocksArray.length()} 块，超过上限 $MAX_BLOCKS，只导入前 $MAX_BLOCKS 块"
+            warnings += Warning.Truncated(total = blocksArray.length(), max = MAX_BLOCKS)
         }
-        if (skipped > 0) warnings += "忽略了 $skipped 个格式错误的条目"
-        if (idFixed > 0) warnings += "$idFixed 块的 ID 重复，已重新分配"
-        if (paramFixed > 0) warnings += "$paramFixed 块的参数超出合理范围，已自动校正"
+        if (skipped > 0) warnings += Warning.Skipped(skipped)
+        if (idFixed > 0) warnings += Warning.IdFixed(idFixed)
+        if (paramFixed > 0) warnings += Warning.ParamFixed(paramFixed)
 
         return ImportResult.Success(result, warnings)
     }
@@ -169,7 +188,7 @@ object ConfigIO {
      * 手指拖出来的位置天然在屏幕内；文件里的 0.0~1.0 之外的值却可能让遮挡块
      * 直接跑到屏幕外，用户只会看到"导入了但什么都没有"。所以边界必须在这里收住。
      */
-    private fun normalize(raw: BlockConfig, takenIds: MutableSet<String>): BlockConfig {
+    private fun normalize(raw: BlockConfig, takenIds: MutableSet<String>, defaultName: String): BlockConfig {
         val candidateId = raw.id.trim().ifBlank { BlockConfig.newId() }
         val uniqueId = if (takenIds.add(candidateId)) {
             candidateId
@@ -179,7 +198,7 @@ object ConfigIO {
 
         return raw.copy(
             id = uniqueId,
-            name = raw.name.trim().ifBlank { "遮挡块" }.take(MAX_NAME_LEN),
+            name = raw.name.trim().ifBlank { defaultName }.take(MAX_NAME_LEN),
             nx = raw.nx.coerceIn(0f, 0.98f),
             ny = raw.ny.coerceIn(0f, 0.98f),
             nw = raw.nw.coerceIn(0.05f, 1f),

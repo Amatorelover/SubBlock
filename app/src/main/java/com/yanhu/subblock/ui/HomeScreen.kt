@@ -26,13 +26,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.BlurOn
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Square
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
@@ -41,6 +40,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -64,15 +64,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.yanhu.subblock.AppLocale
 import com.yanhu.subblock.BuildConfig
+import com.yanhu.subblock.R
 import com.yanhu.subblock.data.BlockConfig
-import com.yanhu.subblock.data.BlockMode
 import com.yanhu.subblock.data.ConfigIO
 import com.yanhu.subblock.data.Presets
 import com.yanhu.subblock.data.SettingsStore
 import com.yanhu.subblock.overlay.OverlayService
+import com.yanhu.subblock.overlay.OverlayStatus
+import com.yanhu.subblock.overlay.OverlayStatusBus
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -81,22 +86,28 @@ fun HomeScreen(
     store: SettingsStore,
     hasOverlayPermission: Boolean,
     focusBlockId: String?,
+    language: String,
     onFocusHandled: () -> Unit,
     onRequestOverlayPermission: () -> Unit,
     onOpenSystemSettings: () -> Unit,
-    onOpenAbout: () -> Unit
+    onOpenAbout: () -> Unit,
+    onLanguageChange: (String) -> Unit
 ) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
 
     val enabled by store.enabled.collectAsState(initial = false)
     val blocks by store.blocks.collectAsState(initial = emptyList())
-    val overlayStatus by com.yanhu.subblock.overlay.OverlayStatusBus.state.collectAsState()
+    val overlayStatus by OverlayStatusBus.state.collectAsState()
 
     var editingId by remember { mutableStateOf<String?>(null) }
     var showPresets by remember { mutableStateOf(false) }
     // 刚从文件里解析出来、等待用户确认后才落库的配置
     var pendingImport by remember { mutableStateOf<ConfigIO.ImportResult.Success?>(null) }
+
+    // 预设模板里的文字是"当前语言"的，所以每次重组都按当前语言取一遍
+    val presets = remember(context, language) { Presets.all(context) }
+    val defaultBlockName = stringResource(R.string.block_default_name)
 
     // 从悬浮窗长按跳进来时，直接打开对应那块的编辑面板
     LaunchedEffect(focusBlockId) {
@@ -135,9 +146,12 @@ fun HomeScreen(
         val ok = runCatching {
             context.contentResolver.openOutputStream(uri)?.use { out ->
                 out.write(payload.encodeToByteArray())
-            } ?: error("无法打开输出流")
+            } ?: error("cannot open output stream")
         }.isSuccess
-        toast(if (ok) "已导出 ${blocks.size} 块遮挡区域" else "导出失败，换一个位置再试")
+        toast(
+            if (ok) context.getString(R.string.toast_exported, blocks.size)
+            else context.getString(R.string.toast_export_failed)
+        )
     }
 
     // ---------------- 配置导入 ----------------
@@ -153,10 +167,13 @@ fun HomeScreen(
             }
         }.getOrNull()
         if (text == null) {
-            toast("读取文件失败")
+            toast(context.getString(R.string.toast_read_failed))
         } else {
-            when (val parsed = ConfigIO.parse(text)) {
-                is ConfigIO.ImportResult.Failure -> toast(parsed.reason)
+            when (val parsed = ConfigIO.parse(text, defaultBlockName)) {
+                is ConfigIO.ImportResult.Failure -> {
+                    // 数据层只给"原因类型"，翻译成当前语言是界面层的职责
+                    toast(reasonText(context, parsed.reason))
+                }
                 is ConfigIO.ImportResult.Success -> pendingImport = parsed
             }
         }
@@ -165,10 +182,10 @@ fun HomeScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("遮幕", fontWeight = FontWeight.Medium) },
+                title = { Text(stringResource(R.string.app_name), fontWeight = FontWeight.Medium) },
                 actions = {
                     IconButton(onClick = onOpenAbout) {
-                        Icon(Icons.Filled.Info, contentDescription = "关于")
+                        Icon(Icons.Filled.Info, contentDescription = stringResource(R.string.cd_about))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -206,13 +223,13 @@ fun HomeScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        "遮挡区域",
+                        stringResource(R.string.section_masks),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Medium,
                         modifier = Modifier.weight(1f)
                     )
                     Text(
-                        "${blocks.size} 块",
+                        pluralStringResource(R.plurals.mask_count, blocks.size, blocks.size),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -229,7 +246,7 @@ fun HomeScreen(
                     onClick = { editingId = block.id },
                     onDelete = {
                         scope.launch { store.remove(block.id) }
-                        toast("已删除「${block.name}」")
+                        toast(context.getString(R.string.toast_deleted, displayName(context, block)))
                     }
                 )
             }
@@ -240,7 +257,7 @@ fun HomeScreen(
                         onClick = {
                             val newBlock = BlockConfig(
                                 id = BlockConfig.newId(),
-                                name = "遮挡块 ${blocks.size + 1}"
+                                name = context.getString(R.string.new_mask_name, blocks.size + 1)
                             )
                             scope.launch { store.upsert(newBlock) }
                             if (!enabled) applyEnabled(true)
@@ -249,16 +266,23 @@ fun HomeScreen(
                     ) {
                         Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(6.dp))
-                        Text("新建一块")
+                        Text(stringResource(R.string.action_new_mask))
                     }
                     OutlinedButton(
                         onClick = { showPresets = true },
-                        enabled = Presets.all.isNotEmpty(),
+                        enabled = presets.isNotEmpty(),
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("用预设模板")
+                        Text(stringResource(R.string.action_use_preset))
                     }
                 }
+            }
+
+            item {
+                LanguageCard(
+                    current = language,
+                    onPick = onLanguageChange
+                )
             }
 
             item {
@@ -267,7 +291,7 @@ fun HomeScreen(
                     onExport = {
                         runCatching {
                             exportLauncher.launch(ConfigIO.suggestFileName())
-                        }.onFailure { toast("无法打开文件选择器") }
+                        }.onFailure { toast(context.getString(R.string.toast_no_file_picker)) }
                     },
                     onImport = {
                         runCatching {
@@ -275,7 +299,7 @@ fun HomeScreen(
                             // 标成 application/octet-stream，只筛 json 会让用户"找不到文件"。
                             // 内容是否合规由 ConfigIO.parse 兜住，过滤器不必承担校验职责。
                             importLauncher.launch(arrayOf("*/*"))
-                        }.onFailure { toast("无法打开文件选择器") }
+                        }.onFailure { toast(context.getString(R.string.toast_no_file_picker)) }
                     }
                 )
             }
@@ -286,13 +310,14 @@ fun HomeScreen(
 
     if (showPresets) {
         PresetSheet(
+            presets = presets,
             onDismiss = { showPresets = false },
             onPick = { preset ->
                 val created = preset.build()
                 scope.launch { store.saveBlocks(blocks + created) }
                 if (!enabled) applyEnabled(true)
                 showPresets = false
-                toast("已添加「${preset.name}」")
+                toast(context.getString(R.string.toast_added_preset, preset.name))
             }
         )
     }
@@ -307,7 +332,7 @@ fun HomeScreen(
                 // 会自己重画，不需要任何"通知服务去刷新"的代码。
                 scope.launch { store.saveBlocks(incoming.blocks) }
                 pendingImport = null
-                toast("已导入 ${incoming.blocks.size} 块遮挡区域")
+                toast(context.getString(R.string.toast_imported, incoming.blocks.size))
             }
         )
     }
@@ -321,7 +346,7 @@ fun HomeScreen(
             onDelete = {
                 scope.launch { store.remove(editing.id) }
                 editingId = null
-                toast("已删除「${editing.name}」")
+                toast(context.getString(R.string.toast_deleted, displayName(context, editing)))
             }
         )
     }
@@ -353,14 +378,14 @@ private fun MasterSwitchCard(enabled: Boolean, onToggle: (Boolean) -> Unit) {
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    if (enabled) "遮挡已开启" else "遮挡已关闭",
+                    stringResource(if (enabled) R.string.master_on_title else R.string.master_off_title),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Medium,
                     color = onContainer
                 )
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    if (enabled) "下拉通知栏磁贴也能一键开关" else "打开后遮挡块会立即出现在屏幕上",
+                    stringResource(if (enabled) R.string.master_on_sub else R.string.master_off_sub),
                     style = MaterialTheme.typography.bodyMedium,
                     color = onContainer.copy(alpha = 0.8f)
                 )
@@ -371,7 +396,7 @@ private fun MasterSwitchCard(enabled: Boolean, onToggle: (Boolean) -> Unit) {
 }
 
 @Composable
-private fun ServiceStatusCard(status: com.yanhu.subblock.overlay.OverlayStatus) {
+private fun ServiceStatusCard(status: OverlayStatus) {
     val hasError = status.error != null
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -405,8 +430,11 @@ private fun ServiceStatusCard(status: com.yanhu.subblock.overlay.OverlayStatus) 
                 )
             } else {
                 Text(
-                    if (status.onScreen > 0) "服务运行中 · ${status.onScreen} 块遮挡已上屏"
-                    else "服务运行中 · 等待遮挡块上屏…",
+                    if (status.onScreen > 0) {
+                        pluralStringResource(R.plurals.masks_on_screen, status.onScreen, status.onScreen)
+                    } else {
+                        stringResource(R.string.service_waiting)
+                    },
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -434,7 +462,7 @@ private fun PermissionCard(onGrant: () -> Unit, onOpenSettings: () -> Unit) {
                 )
                 Spacer(Modifier.width(8.dp))
                 Text(
-                    "还差一步：悬浮窗权限",
+                    stringResource(R.string.permission_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onErrorContainer
@@ -442,17 +470,21 @@ private fun PermissionCard(onGrant: () -> Unit, onOpenSettings: () -> Unit) {
             }
             Spacer(Modifier.height(8.dp))
             Text(
-                "遮挡块本质上是系统级悬浮窗，必须由你手动授权。打开后找到「遮幕」，把开关打开即可。",
+                stringResource(R.string.permission_body),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onErrorContainer
             )
             Spacer(Modifier.height(14.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                Button(onClick = onGrant) { Text("去授权") }
+                Button(onClick = onGrant) { Text(stringResource(R.string.permission_grant)) }
                 OutlinedButton(onClick = onOpenSettings) {
-                    Icon(Icons.AutoMirrored.Filled.OpenInNew, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Icon(
+                        Icons.AutoMirrored.Filled.OpenInNew,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
                     Spacer(Modifier.width(6.dp))
-                    Text("应用设置")
+                    Text(stringResource(R.string.permission_app_settings))
                 }
             }
         }
@@ -475,13 +507,13 @@ private fun EmptyHint() {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                "还没有遮挡区域",
+                stringResource(R.string.empty_title),
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Medium
             )
             Spacer(Modifier.height(6.dp))
             Text(
-                "点「新建一块」从零开始，或直接套用一个预设模板。",
+                stringResource(R.string.empty_body),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -495,6 +527,7 @@ private fun BlockCard(
     onClick: () -> Unit,
     onDelete: () -> Unit
 ) {
+    val context = LocalContext.current
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -528,7 +561,7 @@ private fun BlockCard(
             Column(modifier = Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        block.name,
+                        displayName(context, block),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Medium
                     )
@@ -536,7 +569,7 @@ private fun BlockCard(
                         Spacer(Modifier.width(6.dp))
                         Icon(
                             Icons.Filled.Lock,
-                            contentDescription = "已锁定",
+                            contentDescription = stringResource(R.string.cd_locked),
                             modifier = Modifier.size(14.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -545,19 +578,18 @@ private fun BlockCard(
                 Spacer(Modifier.height(3.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        imageVector = if (block.mode == BlockMode.BLUR) Icons.Filled.BlurOn
-                        else Icons.Filled.Square,
+                        imageVector = modeIconOf(block.mode),
                         contentDescription = null,
                         modifier = Modifier.size(13.dp),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(Modifier.width(5.dp))
                     Text(
-                        buildString {
-                            append(if (block.mode == BlockMode.BLUR) "毛玻璃" else "实心色块")
-                            append(" · ")
-                            append("${(block.alpha * 100 / 255)}% 不透明")
-                        },
+                        stringResource(
+                            R.string.block_meta,
+                            modeLabel(context, block.mode),
+                            block.alpha * 100 / 255
+                        ),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -567,7 +599,7 @@ private fun BlockCard(
             IconButton(onClick = onDelete) {
                 Icon(
                     Icons.Filled.Delete,
-                    contentDescription = "删除",
+                    contentDescription = stringResource(R.string.cd_delete),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(20.dp)
                 )
@@ -588,24 +620,78 @@ private fun GestureHintCard(hasOverlayPermission: Boolean) {
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
             Text(
-                "屏幕上怎么操作",
+                stringResource(R.string.gestures_title),
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Medium
             )
             Spacer(Modifier.height(10.dp))
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                AssistChip(onClick = {}, label = { Text("按住拖动 = 移动") })
-                AssistChip(onClick = {}, label = { Text("右下角手柄 = 缩放") })
-                AssistChip(onClick = {}, label = { Text("双击 = 锁定") })
-                AssistChip(onClick = {}, label = { Text("长按 = 回到这里编辑") })
+                AssistChip(onClick = {}, label = { Text(stringResource(R.string.gesture_move)) })
+                AssistChip(onClick = {}, label = { Text(stringResource(R.string.gesture_resize)) })
+                AssistChip(onClick = {}, label = { Text(stringResource(R.string.gesture_lock)) })
+                AssistChip(onClick = {}, label = { Text(stringResource(R.string.gesture_edit)) })
             }
             Spacer(Modifier.height(10.dp))
             Text(
-                if (hasOverlayPermission) {
-                    "提示：如果遮挡块在重启后消失，把「遮幕」加入系统的自启动白名单即可。"
-                } else {
-                    "先完成上面的悬浮窗授权，手势才能生效。"
-                },
+                stringResource(
+                    if (hasOverlayPermission) R.string.gesture_hint_autostart
+                    else R.string.gesture_hint_permission
+                ),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+/**
+ * 语言选择。
+ *
+ * 三个选项的名字刻意用**各自的语言**书写（"简体中文"、"English"），
+ * 而不是把它们翻译成当前界面语言——否则一个只会中文的用户
+ * 在英文界面里看到的全是英文选项，反而找不到怎么切回来。
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun LanguageCard(current: String, onPick: (String) -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    Icons.Filled.Language,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    stringResource(R.string.language_title),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+            Spacer(Modifier.height(10.dp))
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                AppLocale.choices.forEach { value ->
+                    FilterChip(
+                        selected = current == value,
+                        onClick = { if (current != value) onPick(value) },
+                        label = { Text(AppLocale.labelOf(LocalContext.current, value)) }
+                    )
+                }
+            }
+            Spacer(Modifier.height(8.dp))
+            Text(
+                stringResource(R.string.language_hint),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -624,14 +710,13 @@ private fun BackupCard(blockCount: Int, onExport: () -> Unit, onImport: () -> Un
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
             Text(
-                "配置备份",
+                stringResource(R.string.backup_title),
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Medium
             )
             Spacer(Modifier.height(6.dp))
             Text(
-                "把 $blockCount 块遮挡区域导出成一个 JSON 文件。换手机、重装或误删之后，" +
-                    "用它一键恢复。文件存到哪里由你决定，全程不经过任何服务器。",
+                stringResource(R.string.backup_body, blockCount),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -644,7 +729,7 @@ private fun BackupCard(blockCount: Int, onExport: () -> Unit, onImport: () -> Un
                         modifier = Modifier.size(17.dp)
                     )
                     Spacer(Modifier.width(6.dp))
-                    Text("导出")
+                    Text(stringResource(R.string.backup_export))
                 }
                 OutlinedButton(onClick = onImport, modifier = Modifier.weight(1f)) {
                     Icon(
@@ -653,7 +738,7 @@ private fun BackupCard(blockCount: Int, onExport: () -> Unit, onImport: () -> Un
                         modifier = Modifier.size(17.dp)
                     )
                     Spacer(Modifier.width(6.dp))
-                    Text("导入")
+                    Text(stringResource(R.string.backup_import))
                 }
             }
         }
@@ -667,14 +752,14 @@ private fun ImportConfirmDialog(
     onDismiss: () -> Unit,
     onConfirm: () -> Unit
 ) {
+    val context = LocalContext.current
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("导入这份配置？") },
+        title = { Text(stringResource(R.string.import_title)) },
         text = {
             Column {
                 Text(
-                    "文件里有 ${incoming.blocks.size} 块遮挡区域，" +
-                        "将替换当前的 $currentCount 块。总开关状态不受影响。",
+                    stringResource(R.string.import_body, incoming.blocks.size, currentCount),
                     style = MaterialTheme.typography.bodyMedium
                 )
                 // 自动修正过的地方必须让用户看见，不能悄悄改掉他的数据
@@ -682,7 +767,7 @@ private fun ImportConfirmDialog(
                     Spacer(Modifier.height(12.dp))
                     incoming.warnings.forEach { w ->
                         Text(
-                            "· $w",
+                            "· ${warningText(context, w)}",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -691,7 +776,7 @@ private fun ImportConfirmDialog(
                 if (currentCount > 0) {
                     Spacer(Modifier.height(12.dp))
                     Text(
-                        "当前 $currentCount 块会被覆盖。想留个底，可以先「导出」再导入。",
+                        stringResource(R.string.import_overwrite_hint, currentCount),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -699,10 +784,10 @@ private fun ImportConfirmDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = onConfirm) { Text("导入并替换") }
+            TextButton(onClick = onConfirm) { Text(stringResource(R.string.import_confirm)) }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("取消") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
         }
     )
 }

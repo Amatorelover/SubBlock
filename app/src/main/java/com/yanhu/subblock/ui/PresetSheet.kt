@@ -19,13 +19,23 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.yanhu.subblock.R
 import com.yanhu.subblock.data.Presets
 
+/**
+ * 预设模板面板。
+ *
+ * 预设列表由调用方传入（已按当前语言翻译好），
+ * 这一层只负责展示——这样"有哪些预设"的知识只存在于 Presets 一处。
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PresetSheet(
+    presets: List<Presets.Preset>,
     onDismiss: () -> Unit,
     onPick: (Presets.Preset) -> Unit
 ) {
@@ -39,13 +49,13 @@ fun PresetSheet(
                 .padding(bottom = 36.dp)
         ) {
             Text(
-                "预设模板",
+                stringResource(R.string.preset_sheet_title),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Medium
             )
             Spacer(Modifier.height(4.dp))
             Text(
-                "套用后可以继续手动微调位置和颜色。",
+                stringResource(R.string.preset_sheet_sub),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -57,7 +67,7 @@ fun PresetSheet(
                     .heightIn(max = 460.dp)
                     .verticalScroll(rememberScrollState())
             ) {
-                Presets.all.forEach { preset ->
+                presets.forEach { preset ->
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -72,7 +82,11 @@ fun PresetSheet(
                             )
                             Spacer(Modifier.weight(1f))
                             Text(
-                                "${preset.build().size} 块",
+                                pluralStringResource(
+                                    R.plurals.mask_count,
+                                    preset.build().size,
+                                    preset.build().size
+                                ),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )

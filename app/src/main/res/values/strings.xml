@@ -1,3 +1,197 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  默认语言：英文。
+  为什么默认放英文而不是中文？因为 values/ 是所有语言的"回退"资源——
+  一台日语手机、德语手机找不到自己的 strings.xml 时会落到这里。
+  中文放进 values-zh/，中文系统的用户依然看到中文。
+
+  注意：英文串里刻意不使用撇号（'），因为它在 XML 里需要转义，容易埋坑。
+-->
 <resources>
-    <string name="app_name">遮幕</string>
+    <string name="app_name">SubBlock</string>
+
+    <!-- ============================ 首页 ============================ -->
+    <string name="cd_about">About</string>
+    <string name="master_on_title">Masking is on</string>
+    <string name="master_on_sub">You can also toggle it from the Quick Settings tile</string>
+    <string name="master_off_title">Masking is off</string>
+    <string name="master_off_sub">Turn it on and the masks appear on screen right away</string>
+
+    <plurals name="masks_on_screen">
+        <item quantity="one">Service running · %1$d mask on screen</item>
+        <item quantity="other">Service running · %1$d masks on screen</item>
+    </plurals>
+    <string name="service_waiting">Service running · waiting for masks to appear…</string>
+
+    <string name="permission_title">One step left: overlay permission</string>
+    <string name="permission_body">Each mask is a system-level overlay window, so only you can grant this permission. Find “SubBlock” in the list and switch it on.</string>
+    <string name="permission_grant">Grant now</string>
+    <string name="permission_app_settings">App settings</string>
+
+    <string name="section_masks">Mask areas</string>
+    <plurals name="mask_count">
+        <item quantity="one">%1$d mask</item>
+        <item quantity="other">%1$d masks</item>
+    </plurals>
+
+    <string name="empty_title">No mask areas yet</string>
+    <string name="empty_body">Tap “New mask” to start from scratch, or apply a preset.</string>
+    <string name="action_new_mask">New mask</string>
+    <string name="action_use_preset">Use a preset</string>
+
+    <string name="block_default_name">Mask</string>
+    <string name="new_mask_name">Mask %1$d</string>
+    <string name="cd_locked">Locked</string>
+    <string name="cd_delete">Delete</string>
+    <string name="block_meta">%1$s · %2$d%% opaque</string>
+
+    <string name="mode_solid">Solid color</string>
+    <string name="mode_blur">Blur behind</string>
+    <string name="mode_feather">Soft gradient</string>
+    <string name="mode_stripes">Diagonal stripes</string>
+    <string name="mode_dots">Dot grid</string>
+
+    <string name="gestures_title">On-screen gestures</string>
+    <string name="gesture_move">Drag = move</string>
+    <string name="gesture_resize">Bottom-right handle = resize</string>
+    <string name="gesture_lock">Double tap = lock</string>
+    <string name="gesture_edit">Long press = edit here</string>
+    <string name="gesture_hint_autostart">Tip: if the masks are gone after a reboot, add SubBlock to the auto-start whitelist in your phone settings.</string>
+    <string name="gesture_hint_permission">Grant the overlay permission above first — gestures only work after that.</string>
+
+    <string name="backup_title">Backup</string>
+    <string name="backup_body">Export your %1$d mask areas into a single JSON file and restore them in one tap after switching phones, reinstalling or deleting by accident. You decide where the file goes — nothing ever passes through a server.</string>
+    <string name="backup_export">Export</string>
+    <string name="backup_import">Import</string>
+
+    <string name="language_title">Language</string>
+    <string name="language_system">Follow system</string>
+    <string name="language_zh">简体中文</string>
+    <string name="language_en">English</string>
+    <string name="language_hint">The app reloads immediately after switching.</string>
+
+    <string name="import_title">Import this configuration?</string>
+    <string name="import_body">The file contains %1$d mask areas and will replace the current %2$d. The master switch stays as it is.</string>
+    <string name="import_overwrite_hint">The current %1$d will be overwritten. Tap Export first if you want to keep a copy.</string>
+    <string name="import_confirm">Import and replace</string>
+    <string name="action_cancel">Cancel</string>
+
+    <!-- Toast 提示 -->
+    <string name="toast_exported">Exported %1$d mask areas</string>
+    <string name="toast_export_failed">Export failed — try another location</string>
+    <string name="toast_read_failed">Could not read the file</string>
+    <string name="toast_no_file_picker">Could not open the file picker</string>
+    <string name="toast_imported">Imported %1$d mask areas</string>
+    <string name="toast_deleted">Deleted “%1$s”</string>
+    <string name="toast_added_preset">Added “%1$s”</string>
+
+    <!-- ========================== 编辑面板 ========================== -->
+    <string name="editor_title">Edit mask</string>
+    <string name="label_name">Name</string>
+    <string name="label_mode">Mask style</string>
+    <string name="preview_demo_subtitle">A pesky subtitle used to sit right here</string>
+    <string name="blur_hint">Blur behind needs Android 12 or newer. On older systems it falls back to a translucent fill — the subtitle is still covered.</string>
+    <string name="label_color">Color</string>
+    <string name="color_custom">Custom</string>
+    <string name="label_alpha">Opacity</string>
+    <string name="label_blur_strength">Blur strength</string>
+    <string name="label_corner">Corner radius</string>
+    <string name="section_quick_position">Quick position</string>
+    <string name="quick_bottom">Bottom subtitle</string>
+    <string name="quick_center">Center</string>
+    <string name="quick_top">Top</string>
+    <string name="quick_full">Fill screen</string>
+    <string name="label_lock">Lock position</string>
+    <string name="lock_hint">Stops the mask from being nudged by accident while you watch</string>
+    <string name="action_delete_mask">Delete this mask</string>
+
+    <!-- =========================== 取色器 =========================== -->
+    <string name="picker_title">Pick a color</string>
+    <string name="picker_hex">Hex</string>
+    <string name="picker_hue">Hue</string>
+    <string name="picker_area_hint">Drag inside the square to change saturation and brightness</string>
+    <string name="action_ok">OK</string>
+
+    <!-- ========================== 预设模板 ========================== -->
+    <string name="preset_sheet_title">Preset templates</string>
+    <string name="preset_sheet_sub">You can fine-tune position and color afterwards.</string>
+
+    <string name="preset_short_name">Short-video bottom subtitle</string>
+    <string name="preset_short_desc">Hardcoded subtitles in Douyin / Kuaishou / TikTok / Xiaohongshu</string>
+    <string name="preset_top_name">Top danmaku</string>
+    <string name="preset_top_desc">The scrolling comment area at the top of Bilibili and live streams</string>
+    <string name="preset_both_name">Bottom subtitle + top danmaku</string>
+    <string name="preset_both_desc">Most used for binge-watching: block both ends at once</string>
+    <string name="preset_center_name">Centered large subtitle</string>
+    <string name="preset_center_desc">Subtitles placed in the middle of the frame, common in foreign films and documentaries</string>
+    <string name="preset_right_name">Short-video right-side buttons</string>
+    <string name="preset_right_desc">Covers the like / comment / share column</string>
+    <string name="preset_full_name">Full-width bottom bar</string>
+    <string name="preset_full_desc">The lazy fallback: cover the whole bottom strip</string>
+
+    <string name="block_name_short_sub">Short-video subtitle</string>
+    <string name="block_name_top_danmaku">Top danmaku</string>
+    <string name="block_name_bottom_sub">Bottom subtitle</string>
+    <string name="block_name_center_sub">Center subtitle</string>
+    <string name="block_name_right_buttons">Right-side buttons</string>
+    <string name="block_name_bottom_full">Full-width bottom</string>
+
+    <!-- =========================== 关于页 =========================== -->
+    <string name="about_title">About</string>
+    <string name="cd_back">Back</string>
+    <string name="about_tagline">Hide the burned-in subtitles in your videos</string>
+    <string name="about_label_version">Version</string>
+    <string name="about_label_author">Author</string>
+    <string name="about_label_license">License</string>
+    <string name="about_label_android">Android</string>
+
+    <string name="about_section_author">Author statement</string>
+    <string name="about_author_p1">SubBlock grew out of a small need: watching videos without the burned-in subtitles covering the picture, while every tool I could find was either abandoned or limited to one fixed area. So I wrote my own.</string>
+    <string name="about_author_p2">It does exactly one thing: draw a mask wherever you tell it to. It does not read your screen, does not run text recognition, and never modifies or downloads any video.</string>
+    <string name="about_author_p3">This project is open-sourced under the MIT License and is meant for personal learning and personal use. You are responsible for making sure your use complies with local laws and the terms of the services you use; any consequences of using this software are yours to bear.</string>
+
+    <string name="about_section_privacy">Privacy</string>
+    <string name="about_privacy_1">No network permission — check AndroidManifest.xml yourself, there is no INTERNET</string>
+    <string name="about_privacy_2">No data collection: no analytics, no tracking, no ads, no accounts</string>
+    <string name="about_privacy_3">All configuration is stored on your own device</string>
+
+    <string name="about_section_opensource">Open source</string>
+    <string name="about_opensource_body">The full source code is public. Issues and pull requests are welcome:</string>
+    <string name="about_view_source">View source</string>
+    <string name="about_copy_version">Copy version info</string>
+    <string name="about_version_line">SubBlock v%1$s (%2$d) · Android %3$s (API %4$d)</string>
+
+    <string name="about_section_thanks">Credits</string>
+    <string name="about_thanks_body">This project stands on the shoulders of open source: the Kotlin language, the Jetpack Compose UI toolkit, AndroidX and the Material Design component library.\nThanks also to everyone who reported issues and shared suggestions.</string>
+
+    <!-- ==================== 服务通知与状态 ==================== -->
+    <string name="notif_channel_name">Masking service</string>
+    <string name="notif_channel_desc">Keeps the mask windows running in the background</string>
+    <string name="notif_title">SubBlock is running</string>
+    <string name="notif_text_empty">No mask placed yet</string>
+    <string name="notif_text_count">Masking %1$d areas</string>
+    <string name="notif_action_disable">Turn off</string>
+
+    <string name="service_err_no_permission">Overlay permission is off — go back to the app to grant it</string>
+    <string name="service_err_add_view">Failed to create the overlay window: %1$s</string>
+    <string name="service_err_unknown">unknown error</string>
+    <string name="toast_locked">Locked — double tap to unlock</string>
+    <string name="toast_unlocked">Unlocked — you can drag it now</string>
+
+    <!-- ==================== 导入失败原因（ConfigIO） ==================== -->
+    <string name="import_err_empty">The file is empty</string>
+    <string name="import_err_too_large">The file is over 4 MB — it does not look like a configuration file</string>
+    <string name="import_err_not_json">The content is not valid JSON</string>
+    <string name="import_err_foreign_app">This file belongs to “%1$s”, not to SubBlock</string>
+    <string name="import_err_no_blocks_field">No “blocks” field found — this may not be a SubBlock export</string>
+    <string name="import_err_top_level">The top-level JSON value is neither an object nor an array</string>
+    <string name="import_err_no_blocks">There are no mask areas in this configuration</string>
+    <string name="import_err_all_unrecognized">None of the entries in the file could be recognized</string>
+
+    <!-- 自动修正提示 -->
+    <string name="import_warn_schema_newer">The file comes from a newer version of SubBlock (schema v%1$d); some settings may not be recognized</string>
+    <string name="import_warn_truncated">The file has %1$d masks, above the limit of %2$d — only the first %2$d were imported</string>
+    <string name="import_warn_skipped">Ignored %1$d malformed entries</string>
+    <string name="import_warn_id">%1$d masks had duplicate IDs and were reassigned</string>
+    <string name="import_warn_param">%1$d masks had out-of-range values that were corrected</string>
 </resources>

@@ -21,9 +21,11 @@ import android.view.Gravity
 import android.view.View
 import android.view.WindowManager
 import android.widget.Toast
+import androidx.annotation.StringRes
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
+import com.yanhu.subblock.AppLocale
 import com.yanhu.subblock.MainActivity
 import com.yanhu.subblock.R
 import com.yanhu.subblock.data.BlockConfig
@@ -62,6 +64,16 @@ class OverlayService : Service() {
 
     private var enabled = false
     private var blocks: List<BlockConfig> = emptyList()
+
+    /**
+     * 服务跑在 Application 语境里，本身不认识用户选的语言。
+     * 这里包一层带语言的 Context，专门用来取文案——
+     * 否则用户切成英文后，通知栏和 Toast 还是中文，显得很割裂。
+     */
+    private val uiContext: Context by lazy { AppLocale.wrap(this) }
+
+    private fun tr(@StringRes id: Int, vararg args: Any): String =
+        uiContext.getString(id, *args)
 
     private val mainHandler = Handler(Looper.getMainLooper())
     private val stopRunnable = Runnable {
@@ -149,7 +161,7 @@ class OverlayService : Service() {
         if (!Settings.canDrawOverlays(this)) {
             // 权限被关了，不画，但保留服务让用户能看到提示
             removeAll()
-            OverlayStatusBus.update(running = true, onScreen = 0, error = "悬浮窗权限未开启，请回到应用授权")
+            OverlayStatusBus.update(running = true, onScreen = 0, error = tr(R.string.service_err_no_permission))
             updateNotification()
             return
         }
@@ -187,9 +199,14 @@ class OverlayService : Service() {
             .onFailure { e ->
                 holders.remove(cfg.id)
                 // 失败绝不能静默：把原因喊出来，否则"没显示"永远查不到原因
-                val reason = e.javaClass.simpleName + ": " + (e.message ?: "未知错误")
-                OverlayStatusBus.update(running = true, onScreen = holders.size, error = "创建悬浮窗失败：$reason")
-                toast("创建悬浮窗失败：$reason")
+                val reason = e.javaClass.simpleName + ": " +
+                    (e.message ?: tr(R.string.service_err_unknown))
+                OverlayStatusBus.update(
+                    running = true,
+                    onScreen = holders.size,
+                    error = tr(R.string.service_err_add_view, reason)
+                )
+                toast(tr(R.string.service_err_add_view, reason))
             }
     }
 
@@ -344,7 +361,7 @@ class OverlayService : Service() {
                 val cfg = store.blocks.first().firstOrNull { it.id == targetId } ?: return@launch
                 val next = !cfg.locked
                 store.upsert(cfg.copy(locked = next))
-                toast(if (next) "已锁定，双击可解锁" else "已解锁，可以拖动")
+                toast(if (next) tr(R.string.toast_locked) else tr(R.string.toast_unlocked))
             }
         }
     }
@@ -359,8 +376,12 @@ class OverlayService : Service() {
         val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         if (nm.getNotificationChannel(CHANNEL_ID) == null) {
             nm.createNotificationChannel(
-                NotificationChannel(CHANNEL_ID, "遮挡服务", NotificationManager.IMPORTANCE_LOW).apply {
-                    description = "保持遮挡窗口在后台运行"
+                NotificationChannel(
+                    CHANNEL_ID,
+                    tr(R.string.notif_channel_name),
+                    NotificationManager.IMPORTANCE_LOW
+                ).apply {
+                    description = tr(R.string.notif_channel_desc)
                     setShowBadge(false)
                 }
             )
@@ -378,14 +399,18 @@ class OverlayService : Service() {
             Intent(this, OverlayService::class.java).setAction(ACTION_DISABLE),
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
-        val text = if (blocks.isEmpty()) "还没有放置遮挡块" else "正在遮挡 ${blocks.size} 块区域"
+        val text = if (blocks.isEmpty()) {
+            tr(R.string.notif_text_empty)
+        } else {
+            tr(R.string.notif_text_count, blocks.size)
+        }
 
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_tile)
-            .setContentTitle("遮幕运行中")
+            .setContentTitle(tr(R.string.notif_title))
             .setContentText(text)
             .setContentIntent(open)
-            .addAction(0, "关闭遮挡", disable)
+            .addAction(0, tr(R.string.notif_action_disable), disable)
             .setOngoing(true)
             .setSilent(true)
             .setPriority(NotificationCompat.PRIORITY_LOW)

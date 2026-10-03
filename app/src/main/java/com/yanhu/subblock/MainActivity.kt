@@ -1,5 +1,6 @@
 package com.yanhu.subblock
 
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -28,9 +29,19 @@ class MainActivity : ComponentActivity() {
     private var hasOverlayPermission by mutableStateOf(false)
     private var focusBlockId by mutableStateOf<String?>(null)
     private var showAbout by mutableStateOf(false)
+    private var language by mutableStateOf(AppLocale.SYSTEM)
 
     private val notificationLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
+
+    /**
+     * 语言必须在 Activity 创建之前注入：这里把系统给的 Context
+     * 换成"带指定语言"的 Context，之后这个界面里所有取字符串的地方
+     * 都会自动走对应语言的资源，不需要每个控件自己判断语言。
+     */
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(AppLocale.wrap(newBase))
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,6 +49,7 @@ class MainActivity : ComponentActivity() {
 
         focusBlockId = intent?.getStringExtra(EXTRA_BLOCK_ID)
         hasOverlayPermission = Settings.canDrawOverlays(this)
+        language = AppLocale.read(this)
         askNotificationPermission()
 
         setContent {
@@ -49,14 +61,27 @@ class MainActivity : ComponentActivity() {
                         store = store,
                         hasOverlayPermission = hasOverlayPermission,
                         focusBlockId = focusBlockId,
+                        language = language,
                         onFocusHandled = { focusBlockId = null },
                         onRequestOverlayPermission = ::requestOverlayPermission,
                         onOpenSystemSettings = ::openAppSystemSettings,
-                        onOpenAbout = { showAbout = true }
+                        onOpenAbout = { showAbout = true },
+                        onLanguageChange = ::applyLanguage
                     )
                 }
             }
         }
+    }
+
+    /**
+     * 换语言：先落盘，再让系统重建界面。
+     * 用 recreate() 而不是自己手动改所有文案——把"资源随语言变"这件事
+     * 交给系统，代码里就不会到处散落"当前是什么语言"的判断。
+     */
+    private fun applyLanguage(tag: String) {
+        AppLocale.write(this, tag)
+        language = tag
+        recreate()
     }
 
     override fun onNewIntent(intent: Intent) {

@@ -3,8 +3,29 @@ package com.yanhu.subblock.data
 import org.json.JSONArray
 import org.json.JSONObject
 
-/** 遮挡方式：纯色块 / 毛玻璃模糊 */
-enum class BlockMode { SOLID, BLUR }
+/**
+ * 遮挡方式。
+ *
+ * 注意：枚举名会被原样写进 JSON（`toJson` 存 `mode.name`），
+ * 所以**这些名字是持久化格式的一部分，不能随意改**——
+ * 改了会导致老配置读不回来。新增样式只能往后追加。
+ */
+enum class BlockMode {
+    /** 实心色块：最简单可靠，所有 Android 版本都能用 */
+    SOLID,
+
+    /** 毛玻璃：模糊背后的内容，需要 Android 12+，低版本自动退化为半透明色块 */
+    BLUR,
+
+    /** 渐变羽化：上下边缘渐隐，遮挡与画面的接缝更自然 */
+    FEATHER,
+
+    /** 斜纹：斜向条纹，视觉上更像"贴上去的一条"，遮挡感明确 */
+    STRIPES,
+
+    /** 点阵：细密网点，比实心色块轻，但仍然挡住文字 */
+    DOTS
+}
 
 /**
  * 单个遮挡块的配置。
@@ -15,7 +36,11 @@ enum class BlockMode { SOLID, BLUR }
  */
 data class BlockConfig(
     val id: String,
-    val name: String = "遮挡块",
+    /**
+     * 名称。默认留空，由界面层填上"当地语言"的默认名——
+     * 数据层不该知道用户说什么语言。
+     */
+    val name: String = "",
     /** 左边缘位置，占屏宽的比例 0~1 */
     val nx: Float = 0.05f,
     /** 上边缘位置，占屏高的比例 0~1 */
@@ -54,7 +79,7 @@ data class BlockConfig(
     companion object {
         fun fromJson(o: JSONObject): BlockConfig = BlockConfig(
             id = o.optString("id").ifBlank { newId() },
-            name = o.optString("name", "遮挡块"),
+            name = o.optString("name", ""),
             nx = o.optDouble("nx", 0.05).toFloat(),
             ny = o.optDouble("ny", 0.78).toFloat(),
             nw = o.optDouble("nw", 0.90).toFloat(),

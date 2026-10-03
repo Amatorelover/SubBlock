@@ -43,10 +43,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.yanhu.subblock.BuildConfig
+import com.yanhu.subblock.R
 
 /**
  * 「关于」页。
@@ -66,10 +68,13 @@ fun AboutScreen(onBack: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("关于", fontWeight = FontWeight.Medium) },
+                title = { Text(stringResource(R.string.about_title), fontWeight = FontWeight.Medium) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.cd_back)
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -97,64 +102,61 @@ fun AboutScreen(onBack: () -> Unit) {
             ) {
                 Column(modifier = Modifier.padding(20.dp)) {
                     Text(
-                        "遮幕 · SubBlock",
+                        stringResource(R.string.app_name) + " · SubBlock",
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                     Spacer(Modifier.height(6.dp))
                     Text(
-                        "把视频里的硬字幕盖掉",
+                        stringResource(R.string.about_tagline),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.85f)
                     )
                     Spacer(Modifier.height(14.dp))
                     HorizontalDivider(color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.2f))
                     Spacer(Modifier.height(14.dp))
-                    InfoRow("版本", "${BuildConfig.VERSION_NAME}（${BuildConfig.VERSION_CODE}）")
-                    InfoRow("作者", BuildConfig.AUTHOR_NAME)
-                    InfoRow("协议", "MIT License")
-                    InfoRow("Android", "${Build.VERSION.RELEASE}（API ${Build.VERSION.SDK_INT}）")
+                    InfoRow(
+                        stringResource(R.string.about_label_version),
+                        "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})"
+                    )
+                    InfoRow(stringResource(R.string.about_label_author), BuildConfig.AUTHOR_NAME)
+                    InfoRow(stringResource(R.string.about_label_license), "MIT License")
+                    InfoRow(
+                        stringResource(R.string.about_label_android),
+                        "${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})"
+                    )
                 }
             }
 
             // ---------------- 作者声明 ----------------
             SectionCard(
                 icon = Icons.Filled.Info,
-                title = "作者声明"
+                title = stringResource(R.string.about_section_author)
             ) {
-                BodyText(
-                    "「遮幕」诞生于一个很朴素的需求：看视频时不想被画面上烧死的字幕挡住画面，\n" +
-                        "而能找到的同类工具要么年久失修，要么只允许一块固定区域。于是我自己写了一个。"
-                )
+                BodyText(stringResource(R.string.about_author_p1))
                 Spacer(Modifier.height(10.dp))
-                BodyText(
-                    "它只做一件事：在你指定的位置盖一层遮挡。\n" +
-                        "它不读取屏幕内容、不做文字识别、不修改也不下载任何视频。"
-                )
+                BodyText(stringResource(R.string.about_author_p2))
                 Spacer(Modifier.height(10.dp))
-                BodyText(
-                    "本项目以 MIT 协议开源，仅供个人学习与自用。使用者应自行确保使用方式符合" +
-                        "当地法律法规及相关服务的使用条款，因使用本软件产生的后果由使用者自行承担。"
-                )
+                BodyText(stringResource(R.string.about_author_p3))
             }
 
             // ---------------- 隐私承诺 ----------------
             SectionCard(
                 icon = Icons.Filled.Lock,
-                title = "隐私承诺"
+                title = stringResource(R.string.about_section_privacy)
             ) {
-                Bullet("不申请联网权限——可自行核对 AndroidManifest.xml，其中没有 INTERNET")
-                Bullet("不收集任何数据：没有统计、没有埋点、没有广告、没有账号")
-                Bullet("所有配置只保存在你自己的手机上")
+                Bullet(stringResource(R.string.about_privacy_1))
+                Bullet(stringResource(R.string.about_privacy_2))
+                Bullet(stringResource(R.string.about_privacy_3))
             }
 
             // ---------------- 开源 ----------------
             SectionCard(
                 icon = Icons.Filled.Code,
-                title = "开源与源码"
+                title = stringResource(R.string.about_section_opensource)
             ) {
-                BodyText("代码全部公开，欢迎提 Issue 与 Pull Request：")
+                BodyText(stringResource(R.string.about_opensource_body))
                 Spacer(Modifier.height(8.dp))
                 Text(
                     BuildConfig.GITHUB_URL,
@@ -169,21 +171,26 @@ fun AboutScreen(onBack: () -> Unit) {
                             runCatching { context.startActivity(intent) }
                         }
                     ) {
-                        Text("查看源码")
+                        Text(stringResource(R.string.about_view_source))
                     }
                     OutlinedButton(
                         onClick = {
                             clipboard.setText(
                                 AnnotatedString(
-                                    "遮幕 v${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE}) · " +
-                                        "Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})"
+                                    context.getString(
+                                        R.string.about_version_line,
+                                        BuildConfig.VERSION_NAME,
+                                        BuildConfig.VERSION_CODE,
+                                        Build.VERSION.RELEASE,
+                                        Build.VERSION.SDK_INT
+                                    )
                                 )
                             )
                         }
                     ) {
                         Icon(Icons.Filled.ContentCopy, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(Modifier.width(6.dp))
-                        Text("复制版本信息")
+                        Text(stringResource(R.string.about_copy_version))
                     }
                 }
             }
@@ -191,13 +198,9 @@ fun AboutScreen(onBack: () -> Unit) {
             // ---------------- 致谢 ----------------
             SectionCard(
                 icon = Icons.Filled.Favorite,
-                title = "致谢"
+                title = stringResource(R.string.about_section_thanks)
             ) {
-                BodyText(
-                    "本项目站在这些开源项目肩上：Kotlin 语言、Jetpack Compose 界面框架、" +
-                        "AndroidX 与 Material Design 组件库。\n" +
-                        "也感谢所有提出过建议与问题的人。"
-                )
+                BodyText(stringResource(R.string.about_thanks_body))
             }
         }
     }

@@ -54,7 +54,6 @@ class BlockView(
     private val density = resources.displayMetrics.density
     private fun dp(v: Float) = v * density
 
-    private val fillPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val framePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.STROKE
         strokeWidth = dp(1.5f)
@@ -98,13 +97,12 @@ class BlockView(
         val h = height.toFloat()
         if (w <= 0f || h <= 0f) return
 
-        val r = cfg.corner * density
-
-        // 底色始终绘制：当设备不支持毛玻璃时，它就是唯一的遮挡手段
-        fillPaint.color = withAlpha(cfg.color, cfg.alpha)
-        canvas.drawRoundRect(0f, 0f, w, h, r, r, fillPaint)
+        // 遮挡本体交给共用渲染器 —— 与编辑面板里的预览是同一份代码，
+        // 所以"预览里长什么样"和"屏幕上长什么样"不可能不一致。
+        BlockRenderer.draw(canvas, w, h, density, cfg)
 
         if (showHandles) {
+            val r = cfg.corner * density
             canvas.drawRoundRect(0f, 0f, w, h, r, r, framePaint)
 
             val cx = w - handleRadius
@@ -211,9 +209,6 @@ class BlockView(
         val reach = dp(34f)
         return x >= width - reach && y >= height - reach
     }
-
-    private fun withAlpha(color: Int, alpha: Int): Int =
-        (color and 0x00FFFFFF) or (alpha.coerceIn(0, 255) shl 24)
 
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()

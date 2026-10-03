@@ -196,16 +196,15 @@ object ConfigIO {
             BlockConfig.newId().also { takenIds.add(it) }
         }
 
-        return raw.copy(
+        // 几何与外观的边界**不在这里另写一份**，直接复用 BlockConfig.constrained()——
+        // 于是"文件里来的数据"和"手指拖出来的数据"遵守同一套规则，不会再各行其是。
+        //
+        // 早先这里逐字段各自 coerceIn，看似周全，却漏掉了跨字段约束：
+        // nx ∈ [0, 0.98] 与 nw ∈ [0.05, 1] 分别都合法，所以 nx=0.98 + nw=1.0
+        // 照样越界。逐字段都在范围内 ≠ 整体合法。
+        return raw.constrained().copy(
             id = uniqueId,
-            name = raw.name.trim().ifBlank { defaultName }.take(MAX_NAME_LEN),
-            nx = raw.nx.coerceIn(0f, 0.98f),
-            ny = raw.ny.coerceIn(0f, 0.98f),
-            nw = raw.nw.coerceIn(0.05f, 1f),
-            nh = raw.nh.coerceIn(0.03f, 1f),
-            alpha = raw.alpha.coerceIn(0, 255),
-            blurRadius = raw.blurRadius.coerceIn(0, 100),
-            corner = raw.corner.coerceIn(0f, 64f)
+            name = raw.name.trim().ifBlank { defaultName }.take(MAX_NAME_LEN)
         )
     }
 

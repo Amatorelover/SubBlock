@@ -40,9 +40,8 @@ class SettingsStore(private val context: Context) {
         context.dataStore.edit { it[Keys.ENABLED] = value }
     }
 
-    suspend fun saveBlocks(list: List<BlockConfig>) {
-        context.dataStore.edit { it[Keys.BLOCKS] = BlockConfig.listToJson(list) }
-    }
+    /** 整份替换（新建预设、导入配置时用）。同样经由 [mutate]，几何数据一样会被收束。 */
+    suspend fun saveBlocks(list: List<BlockConfig>) = mutate { list }
 
     /** 新增或更新一个遮挡块 */
     suspend fun upsert(block: BlockConfig) = mutate { list ->
@@ -62,10 +61,19 @@ class SettingsStore(private val context: Context) {
             list.map { if (it.id == id) it.copy(nx = nx, ny = ny, nw = nw, nh = nh) else it }
         }
 
+    /**
+     * 所有写入的**公共出口**。
+     *
+     * 不管数据从哪条路来——界面编辑、快捷定位、拖动落盘、导入解析——
+     * 落盘前都在这里过一遍 [BlockConfig.constrained]。
+     * 于是「磁盘里永远是合法数据」是一条结构保证，
+     * 而不是靠每个入口各自记得打补丁（那正是越界 bug 的成因：
+     * 同一件事有好几个入口，改的人只加固了其中一个）。
+     */
     private suspend fun mutate(f: (List<BlockConfig>) -> List<BlockConfig>) {
         context.dataStore.edit { prefs ->
             val current = BlockConfig.listFromJson(prefs[Keys.BLOCKS])
-            prefs[Keys.BLOCKS] = BlockConfig.listToJson(f(current))
+            prefs[Keys.BLOCKS] = BlockConfig.listToJson(f(current).map { it.constrained() })
         }
     }
 }

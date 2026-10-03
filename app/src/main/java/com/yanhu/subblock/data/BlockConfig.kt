@@ -61,6 +61,38 @@ data class BlockConfig(
     /** 锁定后不可拖动，防止手滑 */
     val locked: Boolean = false
 ) {
+    /**
+     * 把配置收束到「合法且完整可见」的范围。
+     *
+     * 这是**全项目唯一**一处定义几何边界的代码。手指拖动、缩放落盘、
+     * 界面里的快捷定位、导入解析、DataStore 落盘——所有写入路径都经过它，
+     * 于是「数据是否越界」这个问题的答案只有一个来源，不会各写各的。
+     *
+     * 为什么是「完整可见」而不是「至少露出一部分」？
+     * 遮挡条的本职就是在屏幕内挡住字幕：一块大半个在屏外的遮挡，既挡不住东西，
+     * 用户也很难再把它抓回来。让它永远完整待在屏内，「拖丢了找不回来」
+     * 就在结构上不可能发生——而那正是用户最初报上来的症状。
+     *
+     * 关键在**跨字段**约束：nx 与 nw 是互相牵连的，宽度越大，左边缘可移动的
+     * 范围越小（nx 的上限是 `1 - nw`）。逐字段各自限制在 [0,1] 是不够的——
+     * `nx=0.98` 与 `nw=1.0` 各自都「合法」，合起来却跑到屏幕外。
+     * 这就是 [ConfigIO] 里那套「逐字段校验」漏掉的一环。
+     */
+    fun constrained(): BlockConfig {
+        val w = nw.coerceIn(MIN_NW, MAX_N)
+        val h = nh.coerceIn(MIN_NH, MAX_N)
+        return copy(
+            nw = w,
+            nh = h,
+            // 先定尺寸、再定位置：位置的可动范围由尺寸反推而来，顺序不能颠倒。
+            nx = nx.coerceIn(0f, MAX_N - w),
+            ny = ny.coerceIn(0f, MAX_N - h),
+            alpha = alpha.coerceIn(0, MAX_ALPHA),
+            blurRadius = blurRadius.coerceIn(0, MAX_BLUR),
+            corner = corner.coerceIn(0f, MAX_CORNER)
+        )
+    }
+
     fun toJson(): JSONObject = JSONObject().apply {
         put("id", id)
         put("name", name)
@@ -77,6 +109,18 @@ data class BlockConfig(
     }
 
     companion object {
+        // 几何与外观的取值范围。全项目只在 [constrained] 一处使用它们——
+        // 想调整边界，改这里就够了，不必去各个写入路径里逐个找。
+        /** 最小宽度（占屏宽比例）。太窄会连拖动手柄都捏不住 */
+        const val MIN_NW = 0.05f
+        /** 最小高度（占屏高比例） */
+        const val MIN_NH = 0.03f
+        /** 位置与尺寸的统一上限，同时也是"屏幕"的归一化边界 */
+        const val MAX_N = 1f
+        const val MAX_ALPHA = 255
+        const val MAX_BLUR = 100
+        const val MAX_CORNER = 64f
+
         fun fromJson(o: JSONObject): BlockConfig = BlockConfig(
             id = o.optString("id").ifBlank { newId() },
             name = o.optString("name", ""),

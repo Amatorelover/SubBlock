@@ -7,6 +7,7 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.pm.ServiceInfo
 import android.graphics.PixelFormat
 import android.graphics.Point
@@ -69,8 +70,14 @@ class OverlayService : Service() {
      * 服务跑在 Application 语境里，本身不认识用户选的语言。
      * 这里包一层带语言的 Context，专门用来取文案——
      * 否则用户切成英文后，通知栏和 Toast 还是中文，显得很割裂。
+     *
+     * **注意这里是 get，不是 `by lazy`**。早先写成 `by lazy` 是错的：
+     * 它只包一次、之后永不更新，于是用户中途切语言后，服务这边仍握着
+     * 旧语言的 Context——"界面全英文、通知栏还是中文"就是这么来的。
+     * 改成每次现取，配合 [localeListener] 触发刷新，通知栏才能跟上语言。
+     * （语言偏好存在内存里，read 很便宜，不必担心每次都读盘的性能问题。）
      */
-    private val uiContext: Context by lazy { AppLocale.wrap(this) }
+    private val uiContext: Context get() = AppLocale.wrap(this)
 
     private fun tr(@StringRes id: Int, vararg args: Any): String =
         uiContext.getString(id, *args)
@@ -82,6 +89,18 @@ class OverlayService : Service() {
             stopSelf()
         }
     }
+
+    /**
+     * 语言变化的监听器。
+     *
+     * 两个坑都要避开：
+     *  1. **不能**在字段初始化时就注册——字段初始化跑在构造函数里，
+     *     而 Context 要等框架稍后调 attachBaseContext 才挂上，
+     *     那一刻调 getSharedPreferences 会直接抛异常。
+     *  2. **必须**存成字段而不是局部变量——SharedPreferences 只持弱引用，
+     *     局部变量会被 GC 回收，然后监听器静默失效（不报错，只是再也不触发）。
+     */
+    private var localeListener: SharedPreferences.OnSharedPreferenceChangeListener? = null
 
     private val displayManager: DisplayManager by lazy {
         getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
@@ -119,6 +138,10 @@ class OverlayService : Service() {
         }
 
         displayManager.registerDisplayListener(displayListener, null)
+
+        // 语言一变就重建通知。注意这里是在 onCreate 里注册，不能写成字段初始化——
+        // 字段初始化时 Context 还没挂上（见 localeListener 的注释）。
+        localeListener = AppLocale.registerLanguageObserver(this) { onLocaleChanged() }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -136,6 +159,10 @@ class OverlayService : Service() {
     override fun onDestroy() {
         mainHandler.removeCallbacksAndMessages(null)
         runCatching { displayManager.unregisterDisplayListener(displayListener) }
+        // 注销监听器：服务都没了，还挂着一个"语言一变就刷新通知"的回调，
+        // 既多余、又可能让本应回收的服务被弱引用拖住。
+        localeListener?.let { AppLocale.unregisterLanguageObserver(this, it) }
+        localeListener = null
         removeAll()
         scope.cancel()
         // 只报"屏幕上有 0 块"。服务退场并不改变"有没有出错"这个事实——
@@ -317,10 +344,15 @@ class OverlayService : Service() {
 
     private fun toPixels(cfg: BlockConfig): Rect {
         val s = screenSize()
-        val left = (cfg.nx * s.x).roundToInt()
-        val top = (cfg.ny * s.y).roundToInt()
-        val w = (cfg.nw * s.x).roundToInt().coerceAtLeast(dp(48))
-        val h = (cfg.nh * s.y).roundToInt().coerceAtLeast(dp(24))
+        // 「读」这一侧的兜底：即便磁盘上还留着历史脏数据（老版本拖出过屏幕、
+        // 或有人手改过配置文件），画出来的一定完整在屏内。
+        // 与写入侧的 constrained() 是同一套规则——约束在两头都执行，
+        // 中间存的是什么就不重要了。
+        val c = cfg.constrained()
+        val w = (c.nw * s.x).roundToInt().coerceIn(dp(48).coerceAtMost(s.x), s.x)
+        val h = (c.nh * s.y).roundToInt().coerceIn(dp(24).coerceAtMost(s.y), s.y)
+        val left = (c.nx * s.x).roundToInt().coerceIn(0, (s.x - w).coerceAtLeast(0))
+        val top = (c.ny * s.y).roundToInt().coerceIn(0, (s.y - h).coerceAtLeast(0))
         return Rect(left, top, left + w, top + h)
     }
 
@@ -337,8 +369,15 @@ class OverlayService : Service() {
             Rect(params.x, params.y, params.x + params.width, params.y + params.height)
 
         override fun moveBy(dx: Int, dy: Int) {
-            params.x += dx
-            params.y += dy
+            val s = screenSize()
+            // 与数据层同一套边界，只是换算到像素：窗口必须**完整**留在屏内。
+            // 这条以前是缺的——同一件事的两条路径（拖动 / 缩放），只有缩放被
+            // 加固过，拖动可以一路把窗口推出屏幕。推出去之后用户既看不见、
+            // 也点不到，而界面状态条照样说"屏幕上有 1 块"。
+            val maxX = (s.x - params.width).coerceAtLeast(0)
+            val maxY = (s.y - params.height).coerceAtLeast(0)
+            params.x = (params.x + dx).coerceIn(0, maxX)
+            params.y = (params.y + dy).coerceIn(0, maxY)
             view?.let { safeUpdate(it, params) }
         }
 
@@ -346,12 +385,11 @@ class OverlayService : Service() {
             val s = screenSize()
             val minW = dp(48)
             val minH = dp(24)
-            var w = (params.width + dw).coerceAtLeast(minW)
-            var h = (params.height + dh).coerceAtLeast(minH)
-            if (params.x + w > s.x) w = (s.x - params.x).coerceAtLeast(minW)
-            if (params.y + h > s.y) h = (s.y - params.y).coerceAtLeast(minH)
-            params.width = w
-            params.height = h
+            // 上限由"离屏幕边缘还剩多少"决定，所以缩放到边就停，不会溢出屏外。
+            val maxW = (s.x - params.x).coerceAtLeast(minW)
+            val maxH = (s.y - params.y).coerceAtLeast(minH)
+            params.width = (params.width + dw).coerceIn(minW, maxW)
+            params.height = (params.height + dh).coerceIn(minH, maxH)
             view?.let { safeUpdate(it, params) }
         }
 
@@ -393,11 +431,20 @@ class OverlayService : Service() {
 
     private fun createChannel() {
         val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        if (nm.getNotificationChannel(CHANNEL_ID) == null) {
+        val name = tr(R.string.notif_channel_name)
+        val existing = nm.getNotificationChannel(CHANNEL_ID)
+        // 通知渠道的名字是"创建即冻结"的：即便重建服务、重装更新，也不会自己改。
+        // 所以语言变化后，要主动用同名再创建一次来刷新名称与描述
+        // （Android 8+ 对已存在的渠道，createNotificationChannel 会更新 name/description）。
+        //
+        // 这里刻意**不**用"删除后重建"的激进做法：删除渠道在某些系统上不可靠，
+        // 弄不好通知渠道整个消失——那比"名称停在旧语言"严重得多。
+        // 最坏情况也只是设置页里的渠道名没跟上，不影响遮挡功能。
+        if (existing == null || existing.name != name) {
             nm.createNotificationChannel(
                 NotificationChannel(
                     CHANNEL_ID,
-                    tr(R.string.notif_channel_name),
+                    name,
                     NotificationManager.IMPORTANCE_LOW
                 ).apply {
                     description = tr(R.string.notif_channel_desc)
@@ -405,6 +452,12 @@ class OverlayService : Service() {
                 }
             )
         }
+    }
+
+    /** 语言变化时的统一响应：渠道名与通知文案都要跟着走 */
+    private fun onLocaleChanged() {
+        createChannel()
+        updateNotification()
     }
 
     private fun buildNotification(): Notification {

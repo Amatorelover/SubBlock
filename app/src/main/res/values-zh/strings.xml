@@ -43,8 +43,6 @@
     <string name="mode_solid">实心色块</string>
     <string name="mode_blur">毛玻璃模糊</string>
     <string name="mode_feather">渐变羽化</string>
-    <string name="mode_stripes">斜纹</string>
-    <string name="mode_dots">点阵</string>
 
     <string name="gestures_title">屏幕上怎么操作</string>
     <string name="gesture_move">按住拖动 = 移动</string>

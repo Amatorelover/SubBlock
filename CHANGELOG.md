@@ -2,6 +2,32 @@
 
 本项目遵循[语义化版本](https://semver.org/lang/zh-CN/)规范：`主版本.次版本.修订号`。
 
+## [1.4.0] - 2026-10-03
+
+### 变更
+- **遮挡样式从 5 种收敛到 3 种**：移除「斜纹」与「点阵」
+  - 理由：这两个样式的实际遮挡能力与名字不符。点阵按 9dp 间距、3.4dp 半径绘制，
+    覆盖率只有约 45%，字幕会从网格缝隙里透出来；斜纹的覆盖范围用 `width + height`
+    估算（正确做法是对角线长度），在极端长宽比下会漏角。**样式多，不如样式可靠。**
+  - 老配置里的 `STRIPES` / `DOTS` 不会导致崩溃：反序列化带兜底，
+    读不出来的值静默降级为实心色块
+  - `BlockRenderer` 相应删掉 `Path` / `clipPath` 分支，只剩 `drawRoundRect` 一条路径
+
+### 修复
+- **预设列表不跟随语言**：预设的名字与说明始终显示系统语言，应用内切换语言对它无效
+  - 根因：`Presets.all()` 用 `context.applicationContext` 取文案，而 `AppLocale`
+    的语言包装只作用于 Activity —— Application 的资源**永远是系统语言**
+  - 修法：改为在 `all()` 调用当时就完成翻译（此刻传入的 Context 带着正确语言），
+    产出的 `Preset` / `Blueprint` 只含纯字符串，**不再持有任何 Context**。
+    一步同时解决了"语言不对"和"可能泄漏"两个隐患
+  - 顺带：`PresetSheet` 不再调用 `build()` 只为数块数，改用新的 `Preset.count`
+
+### 移除
+- `OverlayStatus.running` 字段：无人读取，且语义自相矛盾 ——
+  服务准备退出时仍上报 `true`，被系统强杀时又会永久停在过期的 `true`。
+  「服务是否在跑」改由界面用 `enabled && onScreen` 自行判断
+- `BlockRenderer.previewColor()`：从未被任何代码调用的死方法
+
 ## [1.3.0] - 2026-10-03
 
 ### 新增

@@ -78,7 +78,7 @@ class OverlayService : Service() {
     private val mainHandler = Handler(Looper.getMainLooper())
     private val stopRunnable = Runnable {
         if (!enabled) {
-            OverlayStatusBus.update(running = false, onScreen = 0)
+            OverlayStatusBus.update(onScreen = 0)
             stopSelf()
         }
     }
@@ -138,7 +138,7 @@ class OverlayService : Service() {
         runCatching { displayManager.unregisterDisplayListener(displayListener) }
         removeAll()
         scope.cancel()
-        OverlayStatusBus.update(running = false, onScreen = 0)
+        OverlayStatusBus.update(onScreen = 0)
         super.onDestroy()
     }
 
@@ -151,7 +151,10 @@ class OverlayService : Service() {
             // 表现就是"界面开关是开的，屏幕上却什么都没有"。
             // 所以先摘掉窗口、广播状态，延迟几秒确认仍然是关的才退出。
             removeAll()
-            OverlayStatusBus.update(running = true, onScreen = 0)
+            // 窗口已全部摘除，如实上报"屏幕上有 0 块"。
+            // 这里以前上报的是 running = true，而服务其实正要退出——
+            // 一个字段同时说"活着"和"要走了"，谁读谁糊涂。现在只报事实。
+            OverlayStatusBus.update(onScreen = 0)
             updateNotification()
             mainHandler.removeCallbacks(stopRunnable)
             mainHandler.postDelayed(stopRunnable, STOP_DELAY_MS)
@@ -161,7 +164,7 @@ class OverlayService : Service() {
         if (!Settings.canDrawOverlays(this)) {
             // 权限被关了，不画，但保留服务让用户能看到提示
             removeAll()
-            OverlayStatusBus.update(running = true, onScreen = 0, error = tr(R.string.service_err_no_permission))
+            OverlayStatusBus.update(onScreen = 0, error = tr(R.string.service_err_no_permission))
             updateNotification()
             return
         }
@@ -173,7 +176,7 @@ class OverlayService : Service() {
             val holder = holders[cfg.id]
             if (holder == null) addBlock(cfg) else syncBlock(holder, cfg)
         }
-        OverlayStatusBus.update(running = true, onScreen = holders.size)
+        OverlayStatusBus.update(onScreen = holders.size)
         updateNotification()
     }
 
@@ -202,7 +205,6 @@ class OverlayService : Service() {
                 val reason = e.javaClass.simpleName + ": " +
                     (e.message ?: tr(R.string.service_err_unknown))
                 OverlayStatusBus.update(
-                    running = true,
                     onScreen = holders.size,
                     error = tr(R.string.service_err_add_view, reason)
                 )

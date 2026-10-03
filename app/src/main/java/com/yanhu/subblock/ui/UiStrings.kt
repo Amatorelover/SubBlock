@@ -4,9 +4,7 @@ import android.content.Context
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BlurOn
 import androidx.compose.material.icons.filled.Gradient
-import androidx.compose.material.icons.filled.GridOn
 import androidx.compose.material.icons.filled.Square
-import androidx.compose.material.icons.filled.Texture
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.yanhu.subblock.R
 import com.yanhu.subblock.data.BlockConfig
@@ -38,8 +36,6 @@ fun modeLabel(context: Context, mode: BlockMode): String = context.getString(
         BlockMode.SOLID -> R.string.mode_solid
         BlockMode.BLUR -> R.string.mode_blur
         BlockMode.FEATHER -> R.string.mode_feather
-        BlockMode.STRIPES -> R.string.mode_stripes
-        BlockMode.DOTS -> R.string.mode_dots
     }
 )
 
@@ -48,8 +44,6 @@ fun modeIconOf(mode: BlockMode): ImageVector = when (mode) {
     BlockMode.SOLID -> Icons.Filled.Square
     BlockMode.BLUR -> Icons.Filled.BlurOn
     BlockMode.FEATHER -> Icons.Filled.Gradient
-    BlockMode.STRIPES -> Icons.Filled.Texture
-    BlockMode.DOTS -> Icons.Filled.GridOn
 }
 
 /** 导入失败的原因 */

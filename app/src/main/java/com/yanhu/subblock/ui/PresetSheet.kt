@@ -84,8 +84,8 @@ fun PresetSheet(
                             Text(
                                 pluralStringResource(
                                     R.plurals.mask_count,
-                                    preset.build().size,
-                                    preset.build().size
+                                    preset.count,
+                                    preset.count
                                 ),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant

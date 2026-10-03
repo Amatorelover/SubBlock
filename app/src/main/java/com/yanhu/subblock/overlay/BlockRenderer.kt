@@ -1,10 +1,8 @@
 package com.yanhu.subblock.overlay
 
 import android.graphics.Canvas
-import android.graphics.Color
 import android.graphics.LinearGradient
 import android.graphics.Paint
-import android.graphics.Path
 import android.graphics.RectF
 import android.graphics.Shader
 import com.yanhu.subblock.data.BlockConfig
@@ -21,16 +19,14 @@ import com.yanhu.subblock.data.BlockMode
  *
  * 用 android.graphics 而不是 Compose 的 DrawScope，就是为了让两侧都能调用：
  * Compose 里可以拿到原生 Canvas（drawIntoCanvas），反过来则做不到。
+ *
+ * 曾经这里还有「斜纹」与「点阵」两种画法，已随枚举一起移除。
+ * 顺带一提：它们用到的 `Path` / `clipPath` 全都依赖"先建一条圆角路径再裁剪"，
+ * 而剩下这三种样式用 `drawRoundRect` 一行就够——纹样越花哨，越容易在
+ * 高 DPI 或极端长宽比下露出马脚（当时斜纹的覆盖范围算错、点阵只有约 45% 覆盖率，
+ * 实际上挡不住字幕）。样式少而可靠，比样式多而漏字要强。
  */
 object BlockRenderer {
-
-    /** 斜纹的条纹周期与粗细（dp） */
-    private const val STRIPE_PERIOD_DP = 14f
-    private const val STRIPE_THICKNESS_DP = 7f
-
-    /** 点阵的间距与点半径（dp） */
-    private const val DOT_SPACING_DP = 9f
-    private const val DOT_RADIUS_DP = 3.4f
 
     /**
      * 在 (0,0)-(width,height) 区域内绘制一块遮挡。
@@ -52,50 +48,14 @@ object BlockRenderer {
             BlockMode.SOLID, BlockMode.BLUR ->
                 canvas.drawRoundRect(rect, radius, radius, paint.apply { color = solid })
 
+            // 上下边缘渐隐：中间保持实心，两端淡出，接缝看起来更自然
             BlockMode.FEATHER ->
-                canvas.drawRoundRect(rect, radius, radius, paint.apply { shader = featherShader(width, height, solid) })
-
-            BlockMode.STRIPES -> {
-                canvas.save()
-                canvas.clipPath(roundRectPath(rect, radius))
-                canvas.rotate(-45f, width / 2f, height / 2f)
-                val period = STRIPE_PERIOD_DP * density
-                val thickness = STRIPE_THICKNESS_DP * density
-                val span = width + height
-                paint.color = solid
-                var x = -span
-                while (x < span) {
-                    canvas.drawRect(x, -span, x + thickness, span, paint)
-                    x += period
-                }
-                canvas.restore()
-            }
-
-            BlockMode.DOTS -> {
-                canvas.save()
-                canvas.clipPath(roundRectPath(rect, radius))
-                val spacing = DOT_SPACING_DP * density
-                val dotRadius = DOT_RADIUS_DP * density
-                paint.color = solid
-                var y = spacing / 2f
-                var row = 0
-                while (y < height) {
-                    // 隔行错开半格：整齐对齐的网格看起来太像"表格"，错开的更自然
-                    var x = if (row % 2 == 0) spacing / 2f else spacing
-                    while (x < width) {
-                        canvas.drawCircle(x, y, dotRadius, paint)
-                        x += spacing
-                    }
-                    y += spacing
-                    row++
-                }
-                canvas.restore()
-            }
+                canvas.drawRoundRect(rect, radius, radius, paint.apply { shader = featherShader(height, solid) })
         }
     }
 
-    /** 上下边缘渐隐：中间保持实心，两端淡出，接缝看起来更自然 */
-    private fun featherShader(width: Float, height: Float, color: Int): Shader {
+    /** 上下边缘渐隐：中间保持实心，两端淡出 */
+    private fun featherShader(height: Float, color: Int): Shader {
         val transparent = color and 0x00FFFFFF
         return LinearGradient(
             0f, 0f, 0f, height,
@@ -105,12 +65,6 @@ object BlockRenderer {
         )
     }
 
-    private fun roundRectPath(rect: RectF, radius: Float): Path =
-        Path().apply { addRoundRect(rect, radius, radius, Path.Direction.CW) }
-
     private fun withAlpha(color: Int, alpha: Int): Int =
         (color and 0x00FFFFFF) or (alpha.coerceIn(0, 255) shl 24)
-
-    /** 给界面层用：某个样式在"不支持模糊"时的颜色提示 */
-    fun previewColor(cfg: BlockConfig): Int = withAlpha(cfg.color, cfg.alpha)
 }

@@ -48,8 +48,6 @@
     <string name="mode_solid">Solid color</string>
     <string name="mode_blur">Blur behind</string>
     <string name="mode_feather">Soft gradient</string>
-    <string name="mode_stripes">Diagonal stripes</string>
-    <string name="mode_dots">Dot grid</string>
 
     <string name="gestures_title">On-screen gestures</string>
     <string name="gesture_move">Drag = move</string>

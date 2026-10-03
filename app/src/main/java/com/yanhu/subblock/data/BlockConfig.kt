@@ -9,6 +9,12 @@ import org.json.JSONObject
  * 注意：枚举名会被原样写进 JSON（`toJson` 存 `mode.name`），
  * 所以**这些名字是持久化格式的一部分，不能随意改**——
  * 改了会导致老配置读不回来。新增样式只能往后追加。
+ *
+ * 关于被删掉的 STRIPES / DOTS：
+ * 这两个名字**曾经存在过**，所以老用户的数据里可能还留着它们。
+ * [BlockConfig.fromJson] 用 `runCatching { BlockMode.valueOf(...) }.getOrDefault(SOLID)`
+ * 兜底，读不出来的值会静默降级成实心色块——老配置不会崩，只是那条遮挡变回纯色。
+ * 名字已被"占用过"，所以将来若想恢复这两个样式，直接沿用旧名即可，不会与历史数据冲突。
  */
 enum class BlockMode {
     /** 实心色块：最简单可靠，所有 Android 版本都能用 */
@@ -18,13 +24,7 @@ enum class BlockMode {
     BLUR,
 
     /** 渐变羽化：上下边缘渐隐，遮挡与画面的接缝更自然 */
-    FEATHER,
-
-    /** 斜纹：斜向条纹，视觉上更像"贴上去的一条"，遮挡感明确 */
-    STRIPES,
-
-    /** 点阵：细密网点，比实心色块轻，但仍然挡住文字 */
-    DOTS
+    FEATHER
 }
 
 /**

@@ -27,7 +27,7 @@
 | 能力 | 说明 |
 |---|---|
 | **多块遮挡** | 同时存在多块遮挡区域，例如底部字幕与顶部弹幕一起盖 |
-| **5 种遮挡样式** | 实心色块、毛玻璃模糊、渐变羽化、斜纹、点阵。样式只影响观感，位置与数据完全通用 |
+| **3 种遮挡样式** | 实心色块、毛玻璃模糊、渐变羽化。样式只影响观感，位置与数据完全通用 |
 | **毛玻璃模糊** | Android 12+ 可用模糊模式，比一块死黑体面得多；低版本自动回退为半透明色块 |
 | **自选颜色** | 内置色板之外，可用 HSV 取色器任意挑色，或直接粘贴十六进制色号 |
 | **中英双语** | 默认英文 + 简体中文，应用内一键切换，无需重启（会立即重建界面） |
@@ -148,7 +148,7 @@ app/src/main/java/com/yanhu/subblock/
 │   └── Presets.kt               预设模板（只存资源 id，按当前语言生成）
 ├── overlay/
 │   ├── OverlayService.kt        前台服务：把数据渲染成屏幕上的悬浮窗
-│   ├── BlockRenderer.kt         五种遮挡样式的绘制（悬浮窗与预览共用同一份）
+│   ├── BlockRenderer.kt         三种遮挡样式的绘制（悬浮窗与预览共用同一份）
 │   ├── BlockView.kt             一块遮挡区域的自绘 View 与手势逻辑
 │   └── OverlayStatus.kt         服务运行状态与错误原因的上报通道
 ├── tile/BlockTileService.kt     控制中心磁贴
@@ -212,8 +212,9 @@ app/src/main/res/
 - [x] v1.1 — 关于页与作者声明、开源配套、Gradle Wrapper
 - [x] v1.2 — 配置导入 / 导出（换机不丢配置）
 - [x] v1.3 — 5 种遮挡样式、自选颜色、中英双语
-- [ ] v1.4 — 单元测试与 GitHub Actions 持续集成
-- [ ] v1.4 — 按应用自动生效（只在指定 App 内显示遮挡）
+- [x] v1.4 — 收敛遮挡样式到 3 种、修复预设不跟随语言、清理失效字段
+- [ ] v1.5 — 单元测试与 GitHub Actions 持续集成
+- [ ] v1.5 — 按应用自动生效（只在指定 App 内显示遮挡）
 - [ ] 长期 — 争取收录进 F-Droid
 
 ## 开源协议
@@ -238,7 +239,7 @@ over video subtitles and danmaku. Built with Kotlin and Jetpack Compose.
 ## Features
 
 - **Multiple overlay blocks** — cover bottom subtitles and top danmaku at the same time
-- **Five mask styles** — solid color, blur behind, soft gradient, diagonal stripes and dot grid
+- **Three mask styles** — solid color, blur behind and soft gradient
 - **Blur mode** — frosted-glass effect on Android 12+; automatically falls back to a
   translucent solid color on older devices
 - **Custom colors** — pick any color with the built-in HSV picker, or paste a hex code

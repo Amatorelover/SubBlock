@@ -7,6 +7,14 @@
 *.keystore
 keystore.properties
 
+# 密钥的备份 / 临时副本。
+# 更换口令时产生过 subblock.jks.bak-weakpass —— 文件名不以 .jks 结尾，
+# 会被上面的 *.jks 规则漏掉。这几条是补漏的兜底网。
+*.jks.*
+*.keystore.*
+*.bak
+app/keystore/
+
 # 本机专属配置：记录着各人电脑上的 Android SDK 路径
 local.properties
 

@@ -206,6 +206,15 @@ app/src/main/res/
 欢迎提交 Issue 与 Pull Request。报告问题时，如果能附上「关于」页中的版本信息
 （应用版本号 + Android 版本），定位会快很多。
 
+## 赞助支持
+
+如果这个小工具帮到了你，欢迎请我喝杯咖啡 ☕ —— 你的支持是它继续维护下去的动力。
+
+- 海外：[GitHub Sponsors](https://github.com/sponsors/Amatorelover)
+- 国内：[爱发电](https://afdian.com/a/REPLACE_WITH_YOUR_AFD_ID)
+
+> 本项目完全免费开源，赞助纯属自愿，不构成任何功能承诺或服务义务。
+
 ## 路线图
 
 - [x] v1.0 — 多块遮挡、毛玻璃、预设模板、磁贴
@@ -301,6 +310,16 @@ All settings stay in the app's private storage on your device.
 
 Issues and pull requests are welcome. When reporting a bug, please include the version
 information shown in the in-app *About* screen.
+
+## Sponsor
+
+If this little tool helped you, consider buying me a coffee ☕. Your support keeps it maintained.
+
+- Overseas: [GitHub Sponsors](https://github.com/sponsors/Amatorelover)
+- China: [Aifadian (爱发电)](https://afdian.com/a/REPLACE_WITH_YOUR_AFD_ID)
+
+> SubBlock is free and open-source. Sponsorship is entirely voluntary and comes with no
+> feature commitment or obligation.
 
 ## License
 

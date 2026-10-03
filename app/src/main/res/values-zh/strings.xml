@@ -157,6 +157,14 @@
     <string name="about_section_thanks">致谢</string>
     <string name="about_thanks_body">本项目站在这些开源项目肩上：Kotlin 语言、Jetpack Compose 界面框架、AndroidX 与 Material Design 组件库。\n也感谢所有提出过建议与问题的人。</string>
 
+    <!-- ========================= 支持作者 ========================= -->
+    <string name="about_section_sponsor">支持这个项目</string>
+    <string name="about_sponsor_body">遮幕完全免费开源，没有广告、不做任何追踪。如果它帮到了你，欢迎请我喝杯咖啡 ☕ —— 你的支持是它继续维护下去的动力。</string>
+    <string name="about_sponsor_github">GitHub Sponsors</string>
+    <string name="about_sponsor_afdian">爱发电</string>
+    <string name="about_sponsor_url_github">https://github.com/sponsors/Amatorelover</string>
+    <string name="about_sponsor_url_afdian">https://afdian.com/a/REPLACE_WITH_YOUR_AFD_ID</string>
+
     <!-- ==================== 服务通知与状态 ==================== -->
     <string name="notif_channel_name">遮挡服务</string>
     <string name="notif_channel_desc">保持遮挡窗口在后台运行</string>

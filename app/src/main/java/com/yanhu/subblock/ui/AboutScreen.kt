@@ -202,6 +202,39 @@ fun AboutScreen(onBack: () -> Unit) {
             ) {
                 BodyText(stringResource(R.string.about_thanks_body))
             }
+
+            // ---------------- 支持作者 ----------------
+            SectionCard(
+                icon = Icons.Filled.Favorite,
+                title = stringResource(R.string.about_section_sponsor)
+            ) {
+                BodyText(stringResource(R.string.about_sponsor_body))
+                Spacer(Modifier.height(14.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    FilledTonalButton(
+                        onClick = {
+                            val intent = Intent(
+                                Intent.ACTION_VIEW,
+                                Uri.parse(context.getString(R.string.about_sponsor_url_github))
+                            )
+                            runCatching { context.startActivity(intent) }
+                        }
+                    ) {
+                        Text(stringResource(R.string.about_sponsor_github))
+                    }
+                    OutlinedButton(
+                        onClick = {
+                            val intent = Intent(
+                                Intent.ACTION_VIEW,
+                                Uri.parse(context.getString(R.string.about_sponsor_url_afdian))
+                            )
+                            runCatching { context.startActivity(intent) }
+                        }
+                    ) {
+                        Text(stringResource(R.string.about_sponsor_afdian))
+                    }
+                }
+            }
         }
     }
 }

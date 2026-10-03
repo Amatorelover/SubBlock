@@ -162,6 +162,14 @@
     <string name="about_section_thanks">Credits</string>
     <string name="about_thanks_body">This project stands on the shoulders of open source: the Kotlin language, the Jetpack Compose UI toolkit, AndroidX and the Material Design component library.\nThanks also to everyone who reported issues and shared suggestions.</string>
 
+    <!-- ========================= 支持作者 ========================= -->
+    <string name="about_section_sponsor">Support the project</string>
+    <string name="about_sponsor_body">SubBlock is free and open-source, with no ads and no tracking. If it helped you, consider buying me a coffee — your support keeps it maintained.</string>
+    <string name="about_sponsor_github">GitHub Sponsors</string>
+    <string name="about_sponsor_afdian">Aifadian (爱发电)</string>
+    <string name="about_sponsor_url_github">https://github.com/sponsors/Amatorelover</string>
+    <string name="about_sponsor_url_afdian">https://afdian.com/a/REPLACE_WITH_YOUR_AFD_ID</string>
+
     <!-- ==================== 服务通知与状态 ==================== -->
     <string name="notif_channel_name">Masking service</string>
     <string name="notif_channel_desc">Keeps the mask windows running in the background</string>

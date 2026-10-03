@@ -32,11 +32,57 @@ data class OverlayStatus(
     val error: String? = null
 )
 
+/**
+ * 状态总线。
+ *
+ * ---------- 为什么不再有一个 `update(onScreen, error = null)` ----------
+ * 这里原本只有一个方法：`update(onScreen: Int, error: String? = null)`。
+ * 看着很简洁，却藏着一个致命缺陷——**"改数字"和"清空错误"被绑成了同一个动作**，
+ * 而 `error` 的默认值是 `null`，于是"清空错误"变成了一件**顺手就发生**的事：
+ *
+ *   OverlayStatusBus.update(onScreen = holders.size)   // 本意只是报个数量
+ *                                                      // 实际把 error 也抹成了 null
+ *
+ * 后果很具体：`addBlock` 失败时写下的那条错误，会被同一轮 `refresh()` 末尾的
+ * `update(onScreen = ...)` 立刻擦掉——**写进去几微秒就被自己删了**，
+ * 界面上那张错误卡片（HomeScreen 里的 ServiceStatusCard）根本没机会显示。
+ * 一句"只是报个数量"的代码，悄悄毁掉了整个错误上报机制。
+ *
+ * 修法不是"记得别传 error"，而是**把这个签名拆掉**：
+ *   - [setOnScreen] 只碰数量
+ *   - [reportError] 只写错误
+ *   - [clearError]  只清错误，且必须显式调用
+ *
+ * 三个动词各管一件事，"顺手"就再也清不掉错误了。
+ * 这比"约定成俗地小心"可靠得多：**让错误在语法上无法悄悄发生，而不是靠人记得。**
+ */
 object OverlayStatusBus {
     private val _state = MutableStateFlow(OverlayStatus())
     val state: StateFlow<OverlayStatus> = _state
 
-    fun update(onScreen: Int, error: String? = null) {
-        _state.value = OverlayStatus(onScreen, error)
+    /** 只更新"屏幕上有几块"，绝不触碰 [OverlayStatus.error] */
+    fun setOnScreen(count: Int) {
+        if (_state.value.onScreen == count) return
+        _state.value = _state.value.copy(onScreen = count)
+    }
+
+    /** 写入一条错误。它会**粘住**，直到 [clearError] 被显式调用 */
+    fun reportError(message: String) {
+        if (_state.value.error == message) return
+        _state.value = _state.value.copy(error = message)
+    }
+
+    /**
+     * 清除错误。
+     *
+     * 调用它的地方应当只有两类，且都有明确理由：
+     *   1. 服务已停：错误所指的状态不复存在，留着只会误导。
+     *   2. 正要重新去挂窗口：清掉上一轮的残影，让 [reportError] 写下的
+     *      永远是"最近一次真实尝试"的结果。
+     * 除此之外任何地方调用它，都是在擦掉用户还没看到的线索。
+     */
+    fun clearError() {
+        if (_state.value.error == null) return
+        _state.value = _state.value.copy(error = null)
     }
 }

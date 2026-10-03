@@ -78,7 +78,7 @@ class OverlayService : Service() {
     private val mainHandler = Handler(Looper.getMainLooper())
     private val stopRunnable = Runnable {
         if (!enabled) {
-            OverlayStatusBus.update(onScreen = 0)
+            OverlayStatusBus.setOnScreen(0)
             stopSelf()
         }
     }
@@ -138,7 +138,9 @@ class OverlayService : Service() {
         runCatching { displayManager.unregisterDisplayListener(displayListener) }
         removeAll()
         scope.cancel()
-        OverlayStatusBus.update(onScreen = 0)
+        // 只报"屏幕上有 0 块"。服务退场并不改变"有没有出错"这个事实——
+        // 比如权限仍然缺失，那条错误对它依然成立，不该被这行顺手抹掉。
+        OverlayStatusBus.setOnScreen(0)
         super.onDestroy()
     }
 
@@ -154,7 +156,10 @@ class OverlayService : Service() {
             // 窗口已全部摘除，如实上报"屏幕上有 0 块"。
             // 这里以前上报的是 running = true，而服务其实正要退出——
             // 一个字段同时说"活着"和"要走了"，谁读谁糊涂。现在只报事实。
-            OverlayStatusBus.update(onScreen = 0)
+            OverlayStatusBus.setOnScreen(0)
+            // 服务马上要停了，不会再有"重试"这件事，上一轮的错误此时是无主残影，清掉。
+            // 这是全项目仅有的两处允许清错误的地方之一（另一处见下面的挂窗尝试）。
+            OverlayStatusBus.clearError()
             updateNotification()
             mainHandler.removeCallbacks(stopRunnable)
             mainHandler.postDelayed(stopRunnable, STOP_DELAY_MS)
@@ -164,10 +169,22 @@ class OverlayService : Service() {
         if (!Settings.canDrawOverlays(this)) {
             // 权限被关了，不画，但保留服务让用户能看到提示
             removeAll()
-            OverlayStatusBus.update(onScreen = 0, error = tr(R.string.service_err_no_permission))
+            OverlayStatusBus.setOnScreen(0)
+            OverlayStatusBus.reportError(tr(R.string.service_err_no_permission))
             updateNotification()
             return
         }
+
+        // ↓ 走到这里，说明这一轮是真的要往屏幕上挂窗口了。
+        //
+        // 先清掉上一轮的失败记录：若这次仍然失败，addBlock 会重新报上来。
+        // 于是 error 的含义变得非常明确——它永远反映**最近一次真实尝试**的结果，
+        // 而不是某次失败的残影；也永远不会因为"顺手改个数字"而消失。
+        //
+        // 修复前，清空动作藏在 setOnScreen（当时的 update(onScreen)）里，
+        // 于是它既发生在"正要重试"时，也发生在"只是改了个数"时——
+        // 而后者会在几微秒内把刚写下的错误擦掉，让错误卡片永远不可达。
+        OverlayStatusBus.clearError()
 
         val wantedIds = blocks.map { it.id }.toSet()
         holders.keys.filterNot { it in wantedIds }.toList().forEach { removeBlock(it) }
@@ -176,7 +193,7 @@ class OverlayService : Service() {
             val holder = holders[cfg.id]
             if (holder == null) addBlock(cfg) else syncBlock(holder, cfg)
         }
-        OverlayStatusBus.update(onScreen = holders.size)
+        OverlayStatusBus.setOnScreen(holders.size)
         updateNotification()
     }
 
@@ -204,10 +221,10 @@ class OverlayService : Service() {
                 // 失败绝不能静默：把原因喊出来，否则"没显示"永远查不到原因
                 val reason = e.javaClass.simpleName + ": " +
                     (e.message ?: tr(R.string.service_err_unknown))
-                OverlayStatusBus.update(
-                    onScreen = holders.size,
-                    error = tr(R.string.service_err_add_view, reason)
-                )
+                // 只写错误，不碰数量：屏幕上有几块由 refresh() 收尾时统一上报。
+                // 而且这条错误会**粘住**，直到下一轮挂窗尝试才开始清算——
+                // 用户因此有充足时间看清失败原因，不会一眨眼就"自愈"。
+                OverlayStatusBus.reportError(tr(R.string.service_err_add_view, reason))
                 toast(tr(R.string.service_err_add_view, reason))
             }
     }

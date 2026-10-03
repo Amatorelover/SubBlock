@@ -12,7 +12,10 @@
 ### 变更
 - **升级 targetSdk / compileSdk 到 Android 16 (API 36)**：从 API 35 提升至 36，向前兼容 Android 16 设备。已核对 manifest 前台服务 `specialUse` 子类型声明（`PROPERTY_SPECIAL_USE_FGS_SUBTYPE=subtitle_overlay`）符合 Android 14+ 强制要求，targetSdk 36 下无需额外改动。
 - `gradle.properties` 显式加入 `android.suppressUnsupportedCompileSdk=36`，抑制 AGP 8.7.3（官方测试上限低于 36）对高版本 compileSdk 的报错；构建已验证通过（aapt2 确认 `compileSdkVersion='36'` / `targetSdkVersion='36'`）。
-- 注：compile 层已确认针对 API 36 成功构建，但**真机 Android 16 上的运行时行为（前台服务启动、edge-to-edge 显示）未经实测**，建议装在 Android 16 设备验证。
+- 注：compile 层已确认针对 API 36 成功构建，**真机 Android 16 运行时行为（前台服务启动、edge-to-edge 显示）已由用户在真机实测通过**。
+
+### 修订（文案对齐，同版本重发）
+- **统一品牌文案为「双语视频」单一场景**：`about_tagline`（中/英）与 README 开头（中文「这是什么」+ 英文 What is this）由旧表述「盖掉硬字幕 / 烧死字幕」改写为「看双语视频时只保留想看的那一行字幕」，与 App 内作者声明（AUTHOR.md / about_author_p1~p3）口径完全一致。仅文案改动，未升版本号，重发 v1.4.5 APK。
 
 ## [1.4.4] - 2026-10-03
 

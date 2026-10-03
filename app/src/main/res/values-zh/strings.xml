@@ -132,7 +132,7 @@
     <!-- =========================== 关于页 =========================== -->
     <string name="about_title">关于</string>
     <string name="cd_back">返回</string>
-    <string name="about_tagline">把视频里的硬字幕盖掉</string>
+    <string name="about_tagline">看双语视频，只留你想看的那行字幕</string>
     <string name="about_label_version">版本</string>
     <string name="about_label_author">作者</string>
     <string name="about_label_license">协议</string>

@@ -1,6 +1,6 @@
 # 遮幕 · SubBlock
 
-> 把视频里"烧死"在画面上的硬字幕盖掉。
+> 看双语视频时，盖住另一种语言的字幕条，只留你想看的那一行。
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android-3DDC84.svg)](#)
@@ -14,7 +14,7 @@
 ## 这是什么
 
 一款 Android 悬浮遮挡工具。它在屏幕上盖一层可拖动、可缩放、可调透明度的遮挡层，
-用来挡住短视频、剧集里"烧死"在画面上的硬字幕或弹幕。
+用来在看双语视频时盖住不想看的那一种语言的字幕，只留下想看的那一行。
 
 它**没有**网络权限——整个应用不联网、不采集数据、没有广告。
 
@@ -238,10 +238,10 @@ app/src/main/res/
 
 # SubBlock
 
-> Cover up burned-in subtitles on Android.
+> When watching bilingual video, cover the other language's subtitle line and keep only the one you want.
 
 An Android overlay utility that draws a draggable, resizable, semi-transparent curtain
-over video subtitles and danmaku. Built with Kotlin and Jetpack Compose.
+over the subtitle language you don't want when watching bilingual video, leaving only the line you want to read. Built with Kotlin and Jetpack Compose.
 
 **It requests no network permission. No tracking, no ads, no accounts.**
 

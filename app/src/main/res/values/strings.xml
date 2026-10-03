@@ -137,7 +137,7 @@
     <!-- =========================== 关于页 =========================== -->
     <string name="about_title">About</string>
     <string name="cd_back">Back</string>
-    <string name="about_tagline">Hide the burned-in subtitles in your videos</string>
+    <string name="about_tagline">When watching bilingual video, keep only the subtitle line you want</string>
     <string name="about_label_version">Version</string>
     <string name="about_label_author">Author</string>
     <string name="about_label_license">License</string>

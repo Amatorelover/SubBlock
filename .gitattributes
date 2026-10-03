@@ -1,0 +1,31 @@
+# 统一换行符，避免 Windows / Linux / macOS 之间互相破坏文件
+#
+# 背景：Git 在 Windows 上默认会把文本文件的换行转成 CRLF。
+# 对 shell 脚本（gradlew）和 .sh 来说这是致命的——Linux 上会报 "bad interpreter"。
+# 所以这里显式声明：源码与脚本一律用 LF，Windows 批处理用 CRLF。
+
+* text=auto eol=lf
+
+# Shell 脚本必须保持 LF，否则类 Unix 系统无法执行
+gradlew text eol=lf
+*.sh text eol=lf
+
+# Windows 批处理必须保持 CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# 二进制文件不做任何换行转换
+*.jar binary
+*.jks binary
+*.keystore binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.apk binary
+*.zip binary
+
+# 语言统计修正：这些文件默认不被识别
+*.kts text
+*.md text

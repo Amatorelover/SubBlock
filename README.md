@@ -20,7 +20,7 @@
 
 ## 界面预览
 
-> 真实截图待补充。建议提供以下 4 张，放入 `docs/screenshots/` 后取消下方注释即可显示：
+> 真实截图待补充。把下列文件放入 `docs/screenshots/`，然后取消对应 `<!-- -->` 注释即可显示：
 >
 > | 文件 | 内容 |
 > |---|---|
@@ -28,9 +28,13 @@
 > | `editor.png` | 编辑面板 + 实时预览 |
 > | `overlay-bilingual.png` | 悬浮窗盖住一种语言字幕、只留另一种（双语视频场景） |
 > | `styles.png` | 三种遮挡样式对比（实心 / 毛玻璃 / 渐变） |
+> | `demo.gif`（可选） | 首页开关 + 拖动遮挡块录屏，建议 ≤ 5 MB |
 >
-> <!-- 放好图后取消下行注释：
-> ![界面预览](docs/screenshots/home.png)
+> <!-- 放好图后取消以下注释：
+> ![首页](docs/screenshots/home.png)
+> ![编辑面板](docs/screenshots/editor.png)
+> ![双语视频遮挡](docs/screenshots/overlay-bilingual.png)
+> ![遮挡样式](docs/screenshots/styles.png)
 > -->
 
 ## 功能

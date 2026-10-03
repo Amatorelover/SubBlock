@@ -31,6 +31,7 @@
 | **实时预览** | 编辑面板内模拟一块屏幕与假字幕，调颜色透明度不必来回切屏幕 |
 | **6 套预设模板** | 抖音底部、B站弹幕、追剧双挡等，点一下自动摆好位置 |
 | **下拉磁贴** | 控制中心一键开关，不必打开应用 |
+| **配置导入 / 导出** | 全部遮挡区域导出成一个 JSON 文件，换手机、重装或误删后一键恢复。用系统文件选择器读写，**不申请任何存储权限**，文件存到哪里由你决定 |
 | **比例记忆** | 位置尺寸按屏幕比例保存，换设备、转横竖屏都能还原 |
 | **边缘吸附与锁定** | 拖动时有对齐辅助，双击锁定防止手滑误触 |
 | **动态取色** | Material 3，界面主色跟随你的壁纸 |
@@ -139,6 +140,7 @@ app/src/main/java/com/yanhu/subblock/
 ├── data/
 │   ├── BlockConfig.kt           单个遮挡块的数据模型（位置尺寸存 0~1 比例）
 │   ├── SettingsStore.kt         DataStore 仓库 —— 全应用唯一的数据源头
+│   ├── ConfigIO.kt              配置导入 / 导出：序列化、格式识别与边界收敛
 │   └── Presets.kt               预设模板
 ├── overlay/
 │   ├── OverlayService.kt        前台服务：把数据渲染成屏幕上的悬浮窗
@@ -197,9 +199,9 @@ app/src/main/java/com/yanhu/subblock/
 
 - [x] v1.0 — 多块遮挡、毛玻璃、预设模板、磁贴
 - [x] v1.1 — 关于页与作者声明、开源配套、Gradle Wrapper
-- [ ] v1.2 — 配置导入 / 导出（换机不丢配置）
-- [ ] v1.2 — 单元测试与 GitHub Actions 持续集成
-- [ ] v1.2 — 按应用自动生效（只在指定 App 内显示遮挡）
+- [x] v1.2 — 配置导入 / 导出（换机不丢配置）
+- [ ] v1.3 — 单元测试与 GitHub Actions 持续集成
+- [ ] v1.3 — 按应用自动生效（只在指定 App 内显示遮挡）
 - [ ] 长期 — 争取收录进 F-Droid
 
 ## 开源协议
@@ -229,6 +231,9 @@ over video subtitles and danmaku. Built with Kotlin and Jetpack Compose.
 - **Live preview** — edit colors and opacity against a mock screen, no app switching
 - **Presets** — one tap to place overlays for common apps such as TikTok or Bilibili
 - **Quick Settings tile** — toggle without opening the app
+- **Config import / export** — export all overlays to a single JSON file and restore them
+  on a new device. Uses the system file picker (SAF), so it needs **no storage permission**,
+  and you decide where the file lives
 - **Proportional geometry** — positions are stored as 0–1 ratios, so they survive
   resolution changes and rotation
 - **Edge snapping, lock and double-tap-to-lock** — prevents accidental drags

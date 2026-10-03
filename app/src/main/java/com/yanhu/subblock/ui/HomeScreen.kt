@@ -1,6 +1,8 @@
 package com.yanhu.subblock.ui
 
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -26,10 +28,13 @@ import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.BlurOn
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.FileDownload
+import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Square
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -43,6 +48,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -60,8 +66,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.yanhu.subblock.BuildConfig
 import com.yanhu.subblock.data.BlockConfig
 import com.yanhu.subblock.data.BlockMode
+import com.yanhu.subblock.data.ConfigIO
 import com.yanhu.subblock.data.Presets
 import com.yanhu.subblock.data.SettingsStore
 import com.yanhu.subblock.overlay.OverlayService
@@ -87,6 +95,8 @@ fun HomeScreen(
 
     var editingId by remember { mutableStateOf<String?>(null) }
     var showPresets by remember { mutableStateOf(false) }
+    // 刚从文件里解析出来、等待用户确认后才落库的配置
+    var pendingImport by remember { mutableStateOf<ConfigIO.ImportResult.Success?>(null) }
 
     // 从悬浮窗长按跳进来时，直接打开对应那块的编辑面板
     LaunchedEffect(focusBlockId) {
@@ -112,6 +122,44 @@ fun HomeScreen(
 
     fun toast(msg: String) {
         Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+    }
+
+    // ---------------- 配置导出 ----------------
+    // 用系统的"新建文档"选择器：用户自己决定存到下载目录、U 盘还是网盘。
+    // 关键收益：App 全程不需要任何存储权限，也就不需要向用户解释"为什么我要读你的文件"。
+    val exportLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/json")
+    ) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult   // 用户取消了，什么都不做
+        val payload = ConfigIO.exportJson(blocks, enabled, BuildConfig.VERSION_NAME)
+        val ok = runCatching {
+            context.contentResolver.openOutputStream(uri)?.use { out ->
+                out.write(payload.encodeToByteArray())
+            } ?: error("无法打开输出流")
+        }.isSuccess
+        toast(if (ok) "已导出 ${blocks.size} 块遮挡区域" else "导出失败，换一个位置再试")
+    }
+
+    // ---------------- 配置导入 ----------------
+    // 顺序很重要：读文件 -> 解析校验 -> 等用户确认 -> 才写库。
+    // 少了"确认"这一步，一次误点就会覆盖掉用户辛苦调好的配置。
+    val importLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        val text = runCatching {
+            context.contentResolver.openInputStream(uri)?.use { input ->
+                input.readBytes().decodeToString()
+            }
+        }.getOrNull()
+        if (text == null) {
+            toast("读取文件失败")
+        } else {
+            when (val parsed = ConfigIO.parse(text)) {
+                is ConfigIO.ImportResult.Failure -> toast(parsed.reason)
+                is ConfigIO.ImportResult.Success -> pendingImport = parsed
+            }
+        }
     }
 
     Scaffold(
@@ -213,6 +261,25 @@ fun HomeScreen(
                 }
             }
 
+            item {
+                BackupCard(
+                    blockCount = blocks.size,
+                    onExport = {
+                        runCatching {
+                            exportLauncher.launch(ConfigIO.suggestFileName())
+                        }.onFailure { toast("无法打开文件选择器") }
+                    },
+                    onImport = {
+                        runCatching {
+                            // 这里故意用 */* 放宽类型：从微信/QQ 转存过来的文件常被系统
+                            // 标成 application/octet-stream，只筛 json 会让用户"找不到文件"。
+                            // 内容是否合规由 ConfigIO.parse 兜住，过滤器不必承担校验职责。
+                            importLauncher.launch(arrayOf("*/*"))
+                        }.onFailure { toast("无法打开文件选择器") }
+                    }
+                )
+            }
+
             item { GestureHintCard(hasOverlayPermission = hasOverlayPermission) }
         }
     }
@@ -226,6 +293,21 @@ fun HomeScreen(
                 if (!enabled) applyEnabled(true)
                 showPresets = false
                 toast("已添加「${preset.name}」")
+            }
+        )
+    }
+
+    pendingImport?.let { incoming ->
+        ImportConfirmDialog(
+            incoming = incoming,
+            currentCount = blocks.size,
+            onDismiss = { pendingImport = null },
+            onConfirm = {
+                // 写进 DataStore 就够了 —— 悬浮窗服务订阅着同一个数据源，
+                // 会自己重画，不需要任何"通知服务去刷新"的代码。
+                scope.launch { store.saveBlocks(incoming.blocks) }
+                pendingImport = null
+                toast("已导入 ${incoming.blocks.size} 块遮挡区域")
             }
         )
     }
@@ -529,4 +611,98 @@ private fun GestureHintCard(hasOverlayPermission: Boolean) {
             )
         }
     }
+}
+
+@Composable
+private fun BackupCard(blockCount: Int, onExport: () -> Unit, onImport: () -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Text(
+                "配置备份",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Medium
+            )
+            Spacer(Modifier.height(6.dp))
+            Text(
+                "把 $blockCount 块遮挡区域导出成一个 JSON 文件。换手机、重装或误删之后，" +
+                    "用它一键恢复。文件存到哪里由你决定，全程不经过任何服务器。",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(Modifier.height(14.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Button(onClick = onExport, modifier = Modifier.weight(1f)) {
+                    Icon(
+                        Icons.Filled.FileDownload,
+                        contentDescription = null,
+                        modifier = Modifier.size(17.dp)
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text("导出")
+                }
+                OutlinedButton(onClick = onImport, modifier = Modifier.weight(1f)) {
+                    Icon(
+                        Icons.Filled.FileUpload,
+                        contentDescription = null,
+                        modifier = Modifier.size(17.dp)
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text("导入")
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ImportConfirmDialog(
+    incoming: ConfigIO.ImportResult.Success,
+    currentCount: Int,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("导入这份配置？") },
+        text = {
+            Column {
+                Text(
+                    "文件里有 ${incoming.blocks.size} 块遮挡区域，" +
+                        "将替换当前的 $currentCount 块。总开关状态不受影响。",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                // 自动修正过的地方必须让用户看见，不能悄悄改掉他的数据
+                if (incoming.warnings.isNotEmpty()) {
+                    Spacer(Modifier.height(12.dp))
+                    incoming.warnings.forEach { w ->
+                        Text(
+                            "· $w",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+                if (currentCount > 0) {
+                    Spacer(Modifier.height(12.dp))
+                    Text(
+                        "当前 $currentCount 块会被覆盖。想留个底，可以先「导出」再导入。",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm) { Text("导入并替换") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("取消") }
+        }
+    )
 }

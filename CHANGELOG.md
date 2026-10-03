@@ -2,11 +2,32 @@
 
 本项目遵循[语义化版本](https://semver.org/lang/zh-CN/)规范：`主版本.次版本.修订号`。
 
+## [Unreleased]
+
+### 文案
+- **作者声明定稿**：用户给出最终三段式声明（诞生需求：看双语视频只想保留一种语言的字幕；它只做一件事：在指定位置盖一层遮挡，不读取屏幕/不识别文字/不改不下载视频；MIT 开源仅供个人学习自用、使用者自负后果）。已同步至 `AUTHOR.md` 第一~三节与应用中英 `about_author_p1/p2/p3`，三处完全一致。
+
+## [1.4.5] - 2026-10-03
+
+### 变更
+- **升级 targetSdk / compileSdk 到 Android 16 (API 36)**：从 API 35 提升至 36，向前兼容 Android 16 设备。已核对 manifest 前台服务 `specialUse` 子类型声明（`PROPERTY_SPECIAL_USE_FGS_SUBTYPE=subtitle_overlay`）符合 Android 14+ 强制要求，targetSdk 36 下无需额外改动。
+- `gradle.properties` 显式加入 `android.suppressUnsupportedCompileSdk=36`，抑制 AGP 8.7.3（官方测试上限低于 36）对高版本 compileSdk 的报错；构建已验证通过（aapt2 确认 `compileSdkVersion='36'` / `targetSdkVersion='36'`）。
+- 注：compile 层已确认针对 API 36 成功构建，但**真机 Android 16 上的运行时行为（前台服务启动、edge-to-edge 显示）未经实测**，建议装在 Android 16 设备验证。
+
+## [1.4.4] - 2026-10-03
+
+### 新增
+- **关于页新增微信 / 支付宝收款码**：在「支持作者」区块新增「微信」「支付宝」两个按钮，点击弹出居中对话框展示对应收款二维码；弹窗提示"长按或截图保存"，**不申请任何权限**，保持零权限隐私承诺
+- 收款码图片作为 `drawable-nodpi` 资源编译进 APK（本地资源，运行时不联网、不读写存储）
+
+### 修复
+- **划掉 App 后重开，开关显示"开"却无遮挡块**：根因是 `enabled` 持久化在 DataStore（划掉进程不清），悬浮窗服务却随进程被杀；重开是全新进程，首屏读到的开关仍是开，但没有任何代码在启动时把服务拉起来。现于 `MainActivity.onResume()` 增加重连逻辑——每次回到前台，只要开关为开且已授予悬浮窗权限就 `OverlayService.start`（幂等，不会叠加窗口）。与既有 BootReceiver 的"开机重连"同源，补齐了"手动重开 App"这条路径
+
 ## [1.4.3] - 2026-10-03
 
 ### 新增
-- **关于页新增「支持作者」入口**：以 GitHub Sponsors（海外）与爱发电（国内）双渠道提供自愿赞助入口，文案明确"纯自愿、不构成任何功能承诺或服务义务"
-- 仓库根目录新增 `.github/FUNDING.yml`，GitHub 仓库页会自动展示 Sponsor 按钮
+- **关于页新增「支持作者」入口**：以爱发电（国内）为赞助渠道提供自愿赞助入口，文案明确"纯自愿、不构成任何功能承诺或服务义务"
+- 仓库根目录新增 `.github/FUNDING.yml`，GitHub 仓库页会自动展示 Sponsor 按钮（指向爱发电主页）
 
 ### 变更（内部）
 - 赞助链接使用字符串资源占位（`about_sponsor_url_*`），便于后续替换而不动代码

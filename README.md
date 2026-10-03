@@ -210,8 +210,7 @@ app/src/main/res/
 
 如果这个小工具帮到了你，欢迎请我喝杯咖啡 ☕ —— 你的支持是它继续维护下去的动力。
 
-- 海外：[GitHub Sponsors](https://github.com/sponsors/Amatorelover)
-- 国内：[爱发电](https://afdian.com/a/REPLACE_WITH_YOUR_AFD_ID)
+- 国内：[爱发电](https://afdian.com/a/lihoo1998)
 
 > 本项目完全免费开源，赞助纯属自愿，不构成任何功能承诺或服务义务。
 
@@ -315,8 +314,7 @@ information shown in the in-app *About* screen.
 
 If this little tool helped you, consider buying me a coffee ☕. Your support keeps it maintained.
 
-- Overseas: [GitHub Sponsors](https://github.com/sponsors/Amatorelover)
-- China: [Aifadian (爱发电)](https://afdian.com/a/REPLACE_WITH_YOUR_AFD_ID)
+- China: [Aifadian (爱发电)](https://afdian.com/a/lihoo1998)
 
 > SubBlock is free and open-source. Sponsorship is entirely voluntary and comes with no
 > feature commitment or obligation.

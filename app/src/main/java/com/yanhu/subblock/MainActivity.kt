@@ -7,6 +7,10 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import androidx.activity.ComponentActivity
+import androidx.lifecycle.lifecycleScope
+import com.yanhu.subblock.overlay.OverlayService
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
@@ -94,6 +98,17 @@ class MainActivity : ComponentActivity() {
         super.onResume()
         // 用户可能刚从系统设置页回来，这里刷新一下权限状态
         hasOverlayPermission = Settings.canDrawOverlays(this)
+        // 重新打开 App（例如从最近任务划掉后）时，进程是全新的，
+        // 悬浮窗服务已随旧进程一起被系统杀掉；但 enabled 仍留在 DataStore 里为 true，
+        // 于是首屏开关显示"开"、状态卡却说"等待中"、屏幕上没有任何遮挡块。
+        // 这里在每次回到前台时，只要开关是开、且悬浮窗权限已授予，就确保服务在跑，
+        // 补齐"持久化状态"与"实际运行"之间的鸿沟。重复调用是幂等的：
+        // 服务已在跑时只会再收到一次 onStartCommand，不会叠加窗口。
+        if (hasOverlayPermission) {
+            lifecycleScope.launch {
+                if (store.enabled.first()) OverlayService.start(this@MainActivity)
+            }
+        }
     }
 
     private fun requestOverlayPermission() {

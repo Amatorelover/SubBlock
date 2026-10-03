@@ -47,6 +47,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.Image
+import androidx.compose.material3.AlertDialog
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import com.yanhu.subblock.BuildConfig
 import com.yanhu.subblock.R
 
@@ -64,6 +72,7 @@ fun AboutScreen(onBack: () -> Unit) {
 
     val context = LocalContext.current
     val clipboard = LocalClipboardManager.current
+    var qrDialogRes: Int? by remember { mutableStateOf<Int?>(null) }
 
     Scaffold(
         topBar = {
@@ -211,17 +220,6 @@ fun AboutScreen(onBack: () -> Unit) {
                 BodyText(stringResource(R.string.about_sponsor_body))
                 Spacer(Modifier.height(14.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    FilledTonalButton(
-                        onClick = {
-                            val intent = Intent(
-                                Intent.ACTION_VIEW,
-                                Uri.parse(context.getString(R.string.about_sponsor_url_github))
-                            )
-                            runCatching { context.startActivity(intent) }
-                        }
-                    ) {
-                        Text(stringResource(R.string.about_sponsor_github))
-                    }
                     OutlinedButton(
                         onClick = {
                             val intent = Intent(
@@ -233,9 +231,52 @@ fun AboutScreen(onBack: () -> Unit) {
                     ) {
                         Text(stringResource(R.string.about_sponsor_afdian))
                     }
+                    OutlinedButton(onClick = { qrDialogRes = R.drawable.donate_wechat }) {
+                        Text(stringResource(R.string.about_sponsor_wechat))
+                    }
+                    OutlinedButton(onClick = { qrDialogRes = R.drawable.donate_alipay }) {
+                        Text(stringResource(R.string.about_sponsor_alipay))
+                    }
                 }
             }
         }
+    }
+
+    // ---------------- 收款二维码弹窗 ----------------
+    if (qrDialogRes != null) {
+        val resId: Int = qrDialogRes!!
+        AlertDialog(
+            onDismissRequest = { qrDialogRes = null },
+            confirmButton = {},
+            title = {
+                Text(
+                    stringResource(
+                        if (resId == R.drawable.donate_wechat) R.string.about_qr_title_wechat
+                        else R.string.about_qr_title_alipay
+                    ),
+                    style = MaterialTheme.typography.titleMedium
+                )
+            },
+            text = {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Image(
+                        painter = painterResource(resId),
+                        contentDescription = null,
+                        modifier = Modifier.size(220.dp),
+                        contentScale = ContentScale.Fit
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        stringResource(R.string.about_qr_hint),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        )
     }
 }
 

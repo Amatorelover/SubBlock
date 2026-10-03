@@ -144,9 +144,9 @@
     <string name="about_label_android">Android</string>
 
     <string name="about_section_author">Author statement</string>
-    <string name="about_author_p1">SubBlock grew out of a small need: watching videos without the burned-in subtitles covering the picture, while every tool I could find was either abandoned or limited to one fixed area. So I wrote my own.</string>
-    <string name="about_author_p2">It does exactly one thing: draw a mask wherever you tell it to. It does not read your screen, does not run text recognition, and never modifies or downloads any video.</string>
-    <string name="about_author_p3">This project is open-sourced under the MIT License and is meant for personal learning and personal use. You are responsible for making sure your use complies with local laws and the terms of the services you use; any consequences of using this software are yours to bear.</string>
+    <string name="about_author_p1">SubBlock grew out of a small need: when watching a bilingual video, you only want to keep one language\'s subtitles, so you cover the other language\'s subtitle line with an overlay block.</string>
+    <string name="about_author_p2">It does exactly one thing: draw a mask wherever you specify. It does not read your screen, performs no text recognition, and never modifies or downloads any video.</string>
+    <string name="about_author_p3">This project is open-sourced under the MIT License and is meant for personal learning and personal use. You are responsible for ensuring your use complies with local laws and the terms of the services you use; any consequences of using this software are yours to bear.</string>
 
     <string name="about_section_privacy">Privacy</string>
     <string name="about_privacy_1">No network permission — check AndroidManifest.xml yourself, there is no INTERNET</string>
@@ -165,10 +165,13 @@
     <!-- ========================= 支持作者 ========================= -->
     <string name="about_section_sponsor">Support the project</string>
     <string name="about_sponsor_body">SubBlock is free and open-source, with no ads and no tracking. If it helped you, consider buying me a coffee — your support keeps it maintained.</string>
-    <string name="about_sponsor_github">GitHub Sponsors</string>
     <string name="about_sponsor_afdian">Aifadian (爱发电)</string>
-    <string name="about_sponsor_url_github">https://github.com/sponsors/Amatorelover</string>
-    <string name="about_sponsor_url_afdian">https://afdian.com/a/REPLACE_WITH_YOUR_AFD_ID</string>
+    <string name="about_sponsor_url_afdian">https://afdian.com/a/lihoo1998</string>
+    <string name="about_sponsor_wechat">WeChat Pay</string>
+    <string name="about_sponsor_alipay">Alipay</string>
+    <string name="about_qr_title_wechat">WeChat Pay QR Code</string>
+    <string name="about_qr_title_alipay">Alipay QR Code</string>
+    <string name="about_qr_hint">Long-press or screenshot to save</string>
 
     <!-- ==================== 服务通知与状态 ==================== -->
     <string name="notif_channel_name">Masking service</string>

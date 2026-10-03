@@ -19,14 +19,14 @@ val hasSigningKey = keystorePropsFile.exists() &&
 
 android {
     namespace = "com.yanhu.subblock"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.yanhu.subblock"
         minSdk = 26
-        targetSdk = 35
-        versionCode = 10
-        versionName = "1.4.3"
+        targetSdk = 36
+        versionCode = 12
+        versionName = "1.4.5"
 
         // 作者与仓库地址集中在这里定义，改一处即可全局同步
         buildConfigField("String", "AUTHOR_NAME", "\"Lihoo\"")

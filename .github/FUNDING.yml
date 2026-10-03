@@ -1,8 +1,4 @@
 # 赞助 / Sponsors
-# 用户需先去 GitHub 后台开通 Sponsors，下方用户名即生效（与仓库所有者一致）。
-github: ["Amatorelover"]
-
-# 爱发电主页：注册后把链接换成你自己的专属地址。
-# 占位符 REPLACE_WITH_YOUR_AFD_ID 需替换为你的爱发电 ID。
+# 爱发电主页（国内用户主要赞助渠道，无需境外身份即可收款）。
 custom:
-  - "https://afdian.com/a/REPLACE_WITH_YOUR_AFD_ID"
+  - "https://afdian.com/a/lihoo1998"

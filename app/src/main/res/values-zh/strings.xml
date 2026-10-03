@@ -139,9 +139,9 @@
     <string name="about_label_android">Android</string>
 
     <string name="about_section_author">作者声明</string>
-    <string name="about_author_p1">「遮幕」诞生于一个很朴素的需求：看视频时不想被画面上烧死的字幕挡住画面，而能找到的同类工具要么年久失修，要么只允许一块固定区域。于是我自己写了一个。</string>
-    <string name="about_author_p2">它只做一件事：在你指定的位置盖一层遮挡。它不读取屏幕内容、不做文字识别、不修改也不下载任何视频。</string>
-    <string name="about_author_p3">本项目以 MIT 协议开源，仅供个人学习与自用。使用者应自行确保使用方式符合当地法律法规及相关服务的使用条款，因使用本软件产生的后果由使用者自行承担。</string>
+    <string name="about_author_p1">「遮幕」诞生于一个很朴素的需求：看双语视频时，你只想保留其中一种语言的字幕，于是便可以用遮挡块把另一种语言的字幕条盖住，只留下想看的那一行。</string>
+    <string name="about_author_p2">它只做一件事： 在你指定的位置上盖一层遮挡。它不读取屏幕内容、不做文字识别、不修改也不下载任何视频。</string>
+    <string name="about_author_p3">本项目以MIT协议开源，仅供个人学习与自用。使用者应自行确保使用方式符合当地法律法规及相关服务的使用条款，因使用本软件产生的后果由使用者自行承担。</string>
 
     <string name="about_section_privacy">隐私承诺</string>
     <string name="about_privacy_1">不申请联网权限——可自行核对 AndroidManifest.xml，其中没有 INTERNET</string>
@@ -160,10 +160,13 @@
     <!-- ========================= 支持作者 ========================= -->
     <string name="about_section_sponsor">支持这个项目</string>
     <string name="about_sponsor_body">遮幕完全免费开源，没有广告、不做任何追踪。如果它帮到了你，欢迎请我喝杯咖啡 ☕ —— 你的支持是它继续维护下去的动力。</string>
-    <string name="about_sponsor_github">GitHub Sponsors</string>
     <string name="about_sponsor_afdian">爱发电</string>
-    <string name="about_sponsor_url_github">https://github.com/sponsors/Amatorelover</string>
-    <string name="about_sponsor_url_afdian">https://afdian.com/a/REPLACE_WITH_YOUR_AFD_ID</string>
+    <string name="about_sponsor_url_afdian">https://afdian.com/a/lihoo1998</string>
+    <string name="about_sponsor_wechat">微信</string>
+    <string name="about_sponsor_alipay">支付宝</string>
+    <string name="about_qr_title_wechat">微信收款码</string>
+    <string name="about_qr_title_alipay">支付宝收款码</string>
+    <string name="about_qr_hint">长按或截图保存</string>
 
     <!-- ==================== 服务通知与状态 ==================== -->
     <string name="notif_channel_name">遮挡服务</string>

@@ -6,6 +6,8 @@ import android.os.Build
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -65,7 +67,7 @@ import com.yanhu.subblock.R
  * 注意版本号取自 BuildConfig —— 它在打包时由构建系统自动注入，
  * 所以永远不可能和真实版本对不上（写死的版本号迟早会过期）。
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AboutScreen(onBack: () -> Unit) {
     BackHandler { onBack() }
@@ -219,7 +221,11 @@ fun AboutScreen(onBack: () -> Unit) {
             ) {
                 BodyText(stringResource(R.string.about_sponsor_body))
                 Spacer(Modifier.height(14.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                FlowRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
                     OutlinedButton(
                         onClick = {
                             val intent = Intent(

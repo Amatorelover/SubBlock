@@ -20,22 +20,15 @@
 
 ## 界面预览
 
-> 真实截图待补充。把下列文件放入 `docs/screenshots/`，然后取消对应 `<!-- -->` 注释即可显示：
->
-> | 文件 | 内容 |
-> |---|---|
-> | `home.png` | 首页：总开关 + 遮挡块列表 |
-> | `editor.png` | 编辑面板 + 实时预览 |
-> | `overlay-bilingual.png` | 悬浮窗盖住一种语言字幕、只留另一种（双语视频场景） |
-> | `styles.png` | 三种遮挡样式对比（实心 / 毛玻璃 / 渐变） |
-> | `demo.gif`（可选） | 首页开关 + 拖动遮挡块录屏，建议 ≤ 5 MB |
->
-> <!-- 放好图后取消以下注释：
-> ![首页](docs/screenshots/home.png)
-> ![编辑面板](docs/screenshots/editor.png)
-> ![双语视频遮挡](docs/screenshots/overlay-bilingual.png)
-> ![遮挡样式](docs/screenshots/styles.png)
-> -->
+| 首页 | 预设模板 |
+|---|---|
+| ![首页：总开关与遮挡块列表](docs/screenshots/home.jpg) | ![预设模板：一键套用常见位置](docs/screenshots/presets.jpg) |
+
+| 编辑面板 | 双语视频效果 |
+|---|---|
+| ![编辑面板：样式、颜色、透明度与圆角](docs/screenshots/editor.jpg) | ![双语视频：盖住一种语言字幕，只留想看的那一行](docs/screenshots/overlay-bilingual.jpg) |
+
+> 如果你有录屏 GIF（建议 ≤ 5 MB），可命名为 `docs/screenshots/demo.gif` 并插入到「这是什么」段落之后，首屏转化率最高。
 
 ## 功能
 

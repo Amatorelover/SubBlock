@@ -25,8 +25,8 @@ android {
         applicationId = "com.yanhu.subblock"
         minSdk = 26
         targetSdk = 35
-        versionCode = 4
-        versionName = "1.2.0"
+        versionCode = 5
+        versionName = "1.2.1"
 
         // 作者与仓库地址集中在这里定义，改一处即可全局同步
         buildConfigField("String", "AUTHOR_NAME", "\"Lihoo\"")

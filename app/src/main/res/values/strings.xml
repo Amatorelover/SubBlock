@@ -171,7 +171,10 @@
     <string name="about_sponsor_alipay">Alipay</string>
     <string name="about_qr_title_wechat">WeChat Pay QR Code</string>
     <string name="about_qr_title_alipay">Alipay QR Code</string>
-    <string name="about_qr_hint">Long-press or screenshot to save</string>
+    <string name="about_qr_hint">Long-press the code to save it to your gallery</string>
+    <string name="about_qr_save">Save to gallery</string>
+    <string name="toast_qr_saved">Saved to gallery</string>
+    <string name="toast_qr_save_failed">Could not save — please long-press the code instead</string>
 
     <!-- ==================== 服务通知与状态 ==================== -->
     <string name="notif_channel_name">Masking service</string>

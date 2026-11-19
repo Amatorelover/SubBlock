@@ -166,7 +166,10 @@
     <string name="about_sponsor_alipay">支付宝</string>
     <string name="about_qr_title_wechat">微信收款码</string>
     <string name="about_qr_title_alipay">支付宝收款码</string>
-    <string name="about_qr_hint">长按或截图保存</string>
+    <string name="about_qr_hint">长按二维码即可保存到相册</string>
+    <string name="about_qr_save">保存到相册</string>
+    <string name="toast_qr_saved">已保存到相册</string>
+    <string name="toast_qr_save_failed">保存失败，请长按二维码另行保存</string>
 
     <!-- ==================== 服务通知与状态 ==================== -->
     <string name="notif_channel_name">遮挡服务</string>

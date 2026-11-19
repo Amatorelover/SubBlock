@@ -12,6 +12,7 @@
 
     <!-- ============================ 首页 ============================ -->
     <string name="cd_about">About</string>
+    <string name="cd_language">Change language</string>
     <string name="master_on_title">Masking is on</string>
     <string name="master_on_sub">You can also toggle it from the Quick Settings tile</string>
     <string name="master_off_title">Masking is off</string>

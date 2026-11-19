@@ -9,6 +9,7 @@
 
     <!-- ============================ 首页 ============================ -->
     <string name="cd_about">关于</string>
+    <string name="cd_language">切换语言</string>
     <string name="master_on_title">遮挡已开启</string>
     <string name="master_on_sub">下拉通知栏磁贴也能一键开关</string>
     <string name="master_off_title">遮挡已关闭</string>

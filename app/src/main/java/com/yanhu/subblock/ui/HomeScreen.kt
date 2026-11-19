@@ -29,6 +29,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.FileUpload
@@ -40,9 +41,10 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -121,6 +123,7 @@ fun HomeScreen(
 
     var editingId by remember { mutableStateOf<String?>(null) }
     var showPresets by remember { mutableStateOf(false) }
+    var languageMenuExpanded by remember { mutableStateOf(false) }
     // 刚从文件里解析出来、等待用户确认后才落库的配置
     var pendingImport by remember { mutableStateOf<ConfigIO.ImportResult.Success?>(null) }
 
@@ -203,6 +206,39 @@ fun HomeScreen(
             TopAppBar(
                 title = { Text(stringResource(R.string.app_name), fontWeight = FontWeight.Medium) },
                 actions = {
+                    // 语言切换收进顶栏：和「关于」并排，不占用正文空间。
+                    // 切换后 MainActivity 会 recreate，下拉菜单会随界面一起消失。
+                    Box {
+                        IconButton(onClick = { languageMenuExpanded = true }) {
+                            Icon(
+                                Icons.Filled.Language,
+                                contentDescription = stringResource(R.string.cd_language)
+                            )
+                        }
+                        DropdownMenu(
+                            expanded = languageMenuExpanded,
+                            onDismissRequest = { languageMenuExpanded = false }
+                        ) {
+                            AppLocale.choices.forEach { value ->
+                                DropdownMenuItem(
+                                    text = { Text(AppLocale.labelOf(context, value)) },
+                                    leadingIcon = {
+                                        if (value == language) {
+                                            Icon(
+                                                Icons.Filled.Check,
+                                                contentDescription = null,
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                        }
+                                    },
+                                    onClick = {
+                                        languageMenuExpanded = false
+                                        if (value != language) onLanguageChange(value)
+                                    }
+                                )
+                            }
+                        }
+                    }
                     IconButton(onClick = onOpenAbout) {
                         Icon(Icons.Filled.Info, contentDescription = stringResource(R.string.cd_about))
                     }
@@ -295,13 +331,6 @@ fun HomeScreen(
                         Text(stringResource(R.string.action_use_preset))
                     }
                 }
-            }
-
-            item {
-                LanguageCard(
-                    current = language,
-                    onPick = onLanguageChange
-                )
             }
 
             item {
@@ -652,10 +681,14 @@ private fun GestureHintCard(hasOverlayPermission: Boolean) {
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Medium
             )
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(12.dp))
             // 这些是"说明"而非按钮：用带底色的静态标签展示，
             // 不套 AssistChip（那会给出可点击的视觉暗示，但点了没有任何反应）。
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            // 行距/列距都留足，避免几条提示挤成一片。
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
                 listOf(
                     stringResource(R.string.gesture_move),
                     stringResource(R.string.gesture_resize),
@@ -664,78 +697,23 @@ private fun GestureHintCard(hasOverlayPermission: Boolean) {
                 ).forEach { label ->
                     Text(
                         label,
-                        style = MaterialTheme.typography.labelLarge,
+                        style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSecondaryContainer,
                         modifier = Modifier
                             .background(
                                 MaterialTheme.colorScheme.secondaryContainer,
-                                RoundedCornerShape(8.dp)
+                                RoundedCornerShape(10.dp)
                             )
-                            .padding(horizontal = 12.dp, vertical = 7.dp)
+                            .padding(horizontal = 14.dp, vertical = 9.dp)
                     )
                 }
             }
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(14.dp))
             Text(
                 stringResource(
                     if (hasOverlayPermission) R.string.gesture_hint_autostart
                     else R.string.gesture_hint_permission
                 ),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-}
-
-/**
- * 语言选择。
- *
- * 三个选项的名字刻意用**各自的语言**书写（"简体中文"、"English"），
- * 而不是把它们翻译成当前界面语言——否则一个只会中文的用户
- * 在英文界面里看到的全是英文选项，反而找不到怎么切回来。
- */
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-private fun LanguageCard(current: String, onPick: (String) -> Unit) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.large,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
-    ) {
-        Column(modifier = Modifier.padding(20.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    Icons.Filled.Language,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp),
-                    tint = MaterialTheme.colorScheme.primary
-                )
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    stringResource(R.string.language_title),
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Medium
-                )
-            }
-            Spacer(Modifier.height(10.dp))
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                AppLocale.choices.forEach { value ->
-                    FilterChip(
-                        selected = current == value,
-                        onClick = { if (current != value) onPick(value) },
-                        label = { Text(AppLocale.labelOf(LocalContext.current, value)) }
-                    )
-                }
-            }
-            Spacer(Modifier.height(8.dp))
-            Text(
-                stringResource(R.string.language_hint),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

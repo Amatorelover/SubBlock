@@ -15,6 +15,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -184,14 +185,19 @@ fun AboutScreen(onBack: () -> Unit) {
             ) {
                 BodyText(stringResource(R.string.about_opensource_body))
                 Spacer(Modifier.height(14.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
                     FilledTonalButton(
                         onClick = {
                             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(BuildConfig.GITHUB_URL))
                             runCatching { context.startActivity(intent) }
-                        }
+                        },
+                        modifier = Modifier.weight(1f),
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
                     ) {
-                        Text(stringResource(R.string.about_view_source))
+                        Text(stringResource(R.string.about_view_source), maxLines = 1)
                     }
                     OutlinedButton(
                         onClick = {
@@ -206,11 +212,13 @@ fun AboutScreen(onBack: () -> Unit) {
                                     )
                                 )
                             )
-                        }
+                        },
+                        modifier = Modifier.weight(1f),
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
                     ) {
                         Icon(Icons.Filled.ContentCopy, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(Modifier.width(6.dp))
-                        Text(stringResource(R.string.about_copy_version))
+                        Text(stringResource(R.string.about_copy_version), maxLines = 1)
                     }
                 }
             }

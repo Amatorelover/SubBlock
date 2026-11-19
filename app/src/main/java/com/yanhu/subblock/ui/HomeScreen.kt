@@ -12,8 +12,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -665,7 +663,6 @@ private fun BlockCard(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun GestureHintCard(hasOverlayPermission: Boolean) {
     Card(
@@ -682,30 +679,30 @@ private fun GestureHintCard(hasOverlayPermission: Boolean) {
                 fontWeight = FontWeight.Medium
             )
             Spacer(Modifier.height(12.dp))
-            // 这些是"说明"而非按钮：用带底色的静态标签展示，
-            // 不套 AssistChip（那会给出可点击的视觉暗示，但点了没有任何反应）。
-            // 行距/列距都留足，避免几条提示挤成一片。
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
+            // 一行一条：不再用 FlowRow。自动换行的标签流在窄屏上行高测量不稳，
+            // 几条提示会挤成一团、甚至压到下面的说明文字上（见用户截图）。
+            // 纵向列表每行独立，永远不会重叠；圆点只作视觉引导，不暗示可点击。
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 listOf(
                     stringResource(R.string.gesture_move),
                     stringResource(R.string.gesture_resize),
                     stringResource(R.string.gesture_lock),
                     stringResource(R.string.gesture_edit)
                 ).forEach { label ->
-                    Text(
-                        label,
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer,
-                        modifier = Modifier
-                            .background(
-                                MaterialTheme.colorScheme.secondaryContainer,
-                                RoundedCornerShape(10.dp)
-                            )
-                            .padding(horizontal = 14.dp, vertical = 9.dp)
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(6.dp)
+                                .clip(RoundedCornerShape(50))
+                                .background(MaterialTheme.colorScheme.primary)
+                        )
+                        Spacer(Modifier.width(10.dp))
+                        Text(
+                            label,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
             Spacer(Modifier.height(14.dp))

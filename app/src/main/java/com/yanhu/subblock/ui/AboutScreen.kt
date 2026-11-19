@@ -281,8 +281,8 @@ fun AboutScreen(onBack: () -> Unit) {
 /**
  * 收款码弹窗。
  *
- * 两张码已统一为 2:3 的 1200×1800 PNG，这里用固定 2:3 的方框展示，
- * 于是无论微信还是支付宝，观感、尺寸完全一致，不再一大一小。
+ * 两张码已裁成纯二维码（无外框/文字）并统一为 1:1 的 1024×1024 PNG，
+ * 这里用正方形方框 + [ContentScale.Fit] 展示，二维码完整不裁切。
  * 长按图片或点「保存到相册」都走 [saveQrToGallery]——只写 MediaStore，
  * 不申请任何存储权限，守住零权限承诺。
  */
@@ -321,8 +321,7 @@ private fun QrCodeDialog(resId: Int, title: String, onDismiss: () -> Unit) {
                     color = Color.White,
                     shadowElevation = 2.dp,
                     modifier = Modifier
-                        .width(220.dp)
-                        .height(330.dp) // 2:3，与统一后的二维码资源一致
+                        .size(260.dp) // 1:1，与纯二维码资源的正方形一致
                         .pointerInput(resId) {
                             detectTapGestures(onLongPress = { save() })
                         }
@@ -331,7 +330,7 @@ private fun QrCodeDialog(resId: Int, title: String, onDismiss: () -> Unit) {
                         painter = painterResource(resId),
                         contentDescription = title,
                         modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
+                        contentScale = ContentScale.Fit // 完整显示二维码，不裁切定位角
                     )
                 }
                 Spacer(Modifier.height(12.dp))

@@ -189,8 +189,7 @@ fun AboutScreen(onBack: () -> Unit) {
                         onClick = {
                             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(BuildConfig.GITHUB_URL))
                             runCatching { context.startActivity(intent) }
-                        },
-                        modifier = Modifier.weight(1f)
+                        }
                     ) {
                         Text(stringResource(R.string.about_view_source))
                     }
@@ -207,8 +206,7 @@ fun AboutScreen(onBack: () -> Unit) {
                                     )
                                 )
                             )
-                        },
-                        modifier = Modifier.weight(1f)
+                        }
                     ) {
                         Icon(Icons.Filled.ContentCopy, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(Modifier.width(6.dp))

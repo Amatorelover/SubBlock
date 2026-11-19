@@ -154,9 +154,9 @@
     <string name="about_privacy_3">All configuration is stored on your own device</string>
 
     <string name="about_section_opensource">Open source</string>
-    <string name="about_opensource_body">The full source code is public. Issues and pull requests are welcome:</string>
+    <string name="about_opensource_body">Fully open source — issues and pull requests are welcome.</string>
     <string name="about_view_source">View source</string>
-    <string name="about_copy_version">Copy version info</string>
+    <string name="about_copy_version">Copy version</string>
     <string name="about_version_line">SubBlock v%1$s (%2$d) · Android %3$s (API %4$d)</string>
 
     <string name="about_section_thanks">Credits</string>
@@ -165,7 +165,7 @@
     <!-- ========================= 支持作者 ========================= -->
     <string name="about_section_sponsor">Support the project</string>
     <string name="about_sponsor_body">SubBlock is free and open-source, with no ads and no tracking. If it helped you, consider buying me a coffee — your support keeps it maintained.</string>
-    <string name="about_sponsor_afdian">Aifadian (爱发电)</string>
+    <string name="about_sponsor_afdian">Afdian</string>
     <string name="about_sponsor_url_afdian">https://afdian.com/a/lihoo1998</string>
     <string name="about_sponsor_wechat">WeChat Pay</string>
     <string name="about_sponsor_alipay">Alipay</string>

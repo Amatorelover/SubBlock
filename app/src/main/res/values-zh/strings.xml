@@ -149,9 +149,9 @@
     <string name="about_privacy_3">所有配置只保存在你自己的手机上</string>
 
     <string name="about_section_opensource">开源与源码</string>
-    <string name="about_opensource_body">代码全部公开，欢迎提 Issue 与 Pull Request：</string>
+    <string name="about_opensource_body">代码全部公开，欢迎提 Issue 与 Pull Request。</string>
     <string name="about_view_source">查看源码</string>
-    <string name="about_copy_version">复制版本信息</string>
+    <string name="about_copy_version">复制版本</string>
     <string name="about_version_line">遮幕 v%1$s（%2$d）· Android %3$s（API %4$d）</string>
 
     <string name="about_section_thanks">致谢</string>

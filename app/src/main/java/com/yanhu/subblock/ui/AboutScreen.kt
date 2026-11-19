@@ -15,8 +15,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -84,7 +82,7 @@ import kotlinx.coroutines.withContext
  * 注意版本号取自 BuildConfig —— 它在打包时由构建系统自动注入，
  * 所以永远不可能和真实版本对不上（写死的版本号迟早会过期）。
  */
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AboutScreen(onBack: () -> Unit) {
     BackHandler { onBack() }
@@ -185,19 +183,14 @@ fun AboutScreen(onBack: () -> Unit) {
                 title = stringResource(R.string.about_section_opensource)
             ) {
                 BodyText(stringResource(R.string.about_opensource_body))
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    BuildConfig.GITHUB_URL,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.primary
-                )
                 Spacer(Modifier.height(14.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     FilledTonalButton(
                         onClick = {
                             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(BuildConfig.GITHUB_URL))
                             runCatching { context.startActivity(intent) }
-                        }
+                        },
+                        modifier = Modifier.weight(1f)
                     ) {
                         Text(stringResource(R.string.about_view_source))
                     }
@@ -214,7 +207,8 @@ fun AboutScreen(onBack: () -> Unit) {
                                     )
                                 )
                             )
-                        }
+                        },
+                        modifier = Modifier.weight(1f)
                     ) {
                         Icon(Icons.Filled.ContentCopy, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(Modifier.width(6.dp))
@@ -238,10 +232,9 @@ fun AboutScreen(onBack: () -> Unit) {
             ) {
                 BodyText(stringResource(R.string.about_sponsor_body))
                 Spacer(Modifier.height(14.dp))
-                FlowRow(
+                Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     OutlinedButton(
                         onClick = {
@@ -250,14 +243,21 @@ fun AboutScreen(onBack: () -> Unit) {
                                 Uri.parse(context.getString(R.string.about_sponsor_url_afdian))
                             )
                             runCatching { context.startActivity(intent) }
-                        }
+                        },
+                        modifier = Modifier.weight(1f)
                     ) {
                         Text(stringResource(R.string.about_sponsor_afdian))
                     }
-                    OutlinedButton(onClick = { qrDialogRes = R.drawable.donate_wechat }) {
+                    OutlinedButton(
+                        onClick = { qrDialogRes = R.drawable.donate_wechat },
+                        modifier = Modifier.weight(1f)
+                    ) {
                         Text(stringResource(R.string.about_sponsor_wechat))
                     }
-                    OutlinedButton(onClick = { qrDialogRes = R.drawable.donate_alipay }) {
+                    OutlinedButton(
+                        onClick = { qrDialogRes = R.drawable.donate_alipay },
+                        modifier = Modifier.weight(1f)
+                    ) {
                         Text(stringResource(R.string.about_sponsor_alipay))
                     }
                 }

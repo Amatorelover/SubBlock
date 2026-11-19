@@ -3,6 +3,9 @@ package com.yanhu.subblock.ui
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -354,11 +357,20 @@ fun HomeScreen(
 
 @Composable
 private fun MasterSwitchCard(enabled: Boolean, onToggle: (Boolean) -> Unit) {
-    val container = if (enabled) {
-        MaterialTheme.colorScheme.primaryContainer
-    } else {
-        MaterialTheme.colorScheme.surfaceVariant
-    }
+    // Expressive 的 spring 回弹：开关切换时容器色以柔和的弹性过渡，
+    // 而不是生硬跳变。dampingRatio<1 带来轻微"回弹"手感。
+    val container by animateColorAsState(
+        targetValue = if (enabled) {
+            MaterialTheme.colorScheme.primaryContainer
+        } else {
+            MaterialTheme.colorScheme.surfaceVariant
+        },
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "master_switch_container"
+    )
     val onContainer = if (enabled) {
         MaterialTheme.colorScheme.onPrimaryContainer
     } else {
@@ -367,7 +379,7 @@ private fun MasterSwitchCard(enabled: Boolean, onToggle: (Boolean) -> Unit) {
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
+        shape = MaterialTheme.shapes.large,
         colors = CardDefaults.cardColors(containerColor = container)
     ) {
         Row(
@@ -400,7 +412,7 @@ private fun ServiceStatusCard(status: OverlayStatus) {
     val hasError = status.error != null
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(
             containerColor = if (hasError) {
                 MaterialTheme.colorScheme.errorContainer
@@ -447,7 +459,7 @@ private fun ServiceStatusCard(status: OverlayStatus) {
 private fun PermissionCard(onGrant: () -> Unit, onOpenSettings: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
+        shape = MaterialTheme.shapes.large,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.errorContainer
         )
@@ -495,7 +507,7 @@ private fun PermissionCard(onGrant: () -> Unit, onOpenSettings: () -> Unit) {
 private fun EmptyHint() {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
+        shape = MaterialTheme.shapes.large,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
         )
@@ -532,7 +544,7 @@ private fun BlockCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(18.dp),
+        shape = MaterialTheme.shapes.large,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
         )
@@ -613,7 +625,7 @@ private fun BlockCard(
 private fun GestureHintCard(hasOverlayPermission: Boolean) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
+        shape = MaterialTheme.shapes.large,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
         )
@@ -656,7 +668,7 @@ private fun GestureHintCard(hasOverlayPermission: Boolean) {
 private fun LanguageCard(current: String, onPick: (String) -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
+        shape = MaterialTheme.shapes.large,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
         )
@@ -703,7 +715,7 @@ private fun LanguageCard(current: String, onPick: (String) -> Unit) {
 private fun BackupCard(blockCount: Int, onExport: () -> Unit, onImport: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
+        shape = MaterialTheme.shapes.large,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
         )

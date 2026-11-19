@@ -4,6 +4,17 @@
 
 ## [Unreleased]
 
+## [1.4.7] - 2026-11-19
+
+### 设计 · Material 3 Expressive 观感
+- **雕塑感圆角**：新增 `ExpressiveShapes`（small 14 / medium 20 / large 28 / extraLarge 34 dp），并把首页、关于页写死的卡片圆角改回引用 `MaterialTheme.shapes`，全站圆角风格可一处控制、更饱满柔和。
+- **Emphasized 排版**：新增 `ExpressiveTypography`，标题族提升到 Bold、副标题 SemiBold，强化"大而有力"的层次对比；正文保持默认字阶可读性不变，沿用系统字体，零体积增加。
+- **spring 回弹动效**：主开关卡片切换时，容器背景色改用 `animateColorAsState + spring`（MediumBouncy / StiffnessLow）弹性过渡，取代生硬跳变——这是 Expressive 最具辨识度的交互手感。
+- **保留 Material You 壁纸动态取色**：Android 12+ 仍从壁纸提取主色调，深浅色随系统。
+
+### 工程取舍（重要）
+- 未采用官方 `MaterialExpressiveTheme` API：它要到 material3 1.5.0 才转正，而 1.5.0 强制升级 Gradle 9.x / AGP 9.1 / compileSdk 37 / Kotlin 2.2。对零权限自用工具而言，为调用一个 API 重构整条构建链收益不划算，故用稳定版 material3 1.3.1 手工复刻 Expressive 三大视觉内核。**构建链、compileSdk、targetSdk、签名全部未变**，可无缝覆盖安装。
+
 ## [1.4.6] - 2026-10-03
 
 ### 修复

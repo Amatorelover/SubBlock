@@ -40,24 +40,26 @@ class BlockTileService : TileService() {
     override fun onClick() {
         super.onClick()
 
-        val next = runBlocking {
-            val current = store.enabled.first()
-            val target = !current
-            store.setEnabled(target)
-            target
-        }
+        // 与主页总开关（HomeScreen.applyEnabled）保持同一套语义：
+        // 开启前先确认悬浮窗权限，没权限就只引导授权、**不改 enabled**。
+        // 旧实现无条件先写 enabled=true，再发现没权限 → 回到 App 开关显示"开"、
+        // 屏幕上却什么都没有，正是"开关开着却没遮挡"那类状态撒谎的又一个入口。
+        val current = runBlocking { store.enabled.first() }
 
-        syncTile(next)
-
-        if (next) {
-            if (Settings.canDrawOverlays(this)) {
-                OverlayService.start(this)
-            } else {
-                // 没有悬浮窗权限，只能回到 App 里引导授权
-                openApp()
-            }
-        } else {
+        if (current) {
+            // ---- 关闭：写状态 + 停服务 ----
+            runBlocking { store.setEnabled(false) }
             OverlayService.stop(this)
+            syncTile(false)
+        } else {
+            // ---- 开启：先验权限，再写状态（顺序不能反）----
+            if (!Settings.canDrawOverlays(this)) {
+                openApp()
+                return
+            }
+            runBlocking { store.setEnabled(true) }
+            OverlayService.start(this)
+            syncTile(true)
         }
     }
 

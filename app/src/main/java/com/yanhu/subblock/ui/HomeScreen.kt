@@ -37,7 +37,6 @@ import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -82,6 +81,23 @@ import com.yanhu.subblock.overlay.OverlayService
 import com.yanhu.subblock.overlay.OverlayStatus
 import com.yanhu.subblock.overlay.OverlayStatusBus
 import kotlinx.coroutines.launch
+
+/**
+ * 新建遮挡块的默认位置：按已有块数做纵向阶梯错开。
+ *
+ * 旧实现里每一块都用同一个默认几何（屏幕底部 0.78），连点几次「新建」会得到
+ * 几块完全重叠在一起的遮挡，屏幕上只看得见最上面那块——用户会以为「点了没反应」。
+ * 这里让新块依次出现在不同高度：块高 0.12、阶梯间隔 0.15，相邻块不会重叠。
+ * 6 档循环（3 行字幕够用）；宽度保持 0.90，不削弱「盖住整行字幕」的本职。
+ */
+private fun newBlockAt(index: Int, name: String): BlockConfig {
+    val steps = listOf(0.78f, 0.63f, 0.48f, 0.33f, 0.18f, 0.03f)
+    return BlockConfig(
+        id = BlockConfig.newId(),
+        name = name,
+        ny = steps[index % steps.size]
+    )
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -258,8 +274,8 @@ fun HomeScreen(
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     FilledTonalButton(
                         onClick = {
-                            val newBlock = BlockConfig(
-                                id = BlockConfig.newId(),
+                            val newBlock = newBlockAt(
+                                index = blocks.size,
                                 name = context.getString(R.string.new_mask_name, blocks.size + 1)
                             )
                             scope.launch { store.upsert(newBlock) }
@@ -637,11 +653,27 @@ private fun GestureHintCard(hasOverlayPermission: Boolean) {
                 fontWeight = FontWeight.Medium
             )
             Spacer(Modifier.height(10.dp))
+            // 这些是"说明"而非按钮：用带底色的静态标签展示，
+            // 不套 AssistChip（那会给出可点击的视觉暗示，但点了没有任何反应）。
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                AssistChip(onClick = {}, label = { Text(stringResource(R.string.gesture_move)) })
-                AssistChip(onClick = {}, label = { Text(stringResource(R.string.gesture_resize)) })
-                AssistChip(onClick = {}, label = { Text(stringResource(R.string.gesture_lock)) })
-                AssistChip(onClick = {}, label = { Text(stringResource(R.string.gesture_edit)) })
+                listOf(
+                    stringResource(R.string.gesture_move),
+                    stringResource(R.string.gesture_resize),
+                    stringResource(R.string.gesture_lock),
+                    stringResource(R.string.gesture_edit)
+                ).forEach { label ->
+                    Text(
+                        label,
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                        modifier = Modifier
+                            .background(
+                                MaterialTheme.colorScheme.secondaryContainer,
+                                RoundedCornerShape(8.dp)
+                            )
+                            .padding(horizontal = 12.dp, vertical = 7.dp)
+                    )
+                }
             }
             Spacer(Modifier.height(10.dp))
             Text(

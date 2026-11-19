@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -291,6 +292,13 @@ private fun QrCodeDialog(resId: Int, title: String, onDismiss: () -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
+    // 品牌色标识：微信绿 / 支付宝蓝，纯码外观相近时一眼可辨
+    val isWechat = resId == R.drawable.donate_wechat
+    val brandColor = if (isWechat) Color(0xFF07C160) else Color(0xFF1677FF)
+    val brandLabel = stringResource(
+        if (isWechat) R.string.about_sponsor_wechat else R.string.about_sponsor_alipay
+    )
+
     fun save() {
         scope.launch {
             val ok = withContext(Dispatchers.IO) { saveQrToGallery(context, resId) }
@@ -306,10 +314,19 @@ private fun QrCodeDialog(resId: Int, title: String, onDismiss: () -> Unit) {
         onDismissRequest = onDismiss,
         confirmButton = {},
         title = {
-            Text(
-                title,
-                style = MaterialTheme.typography.titleMedium
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Surface(
+                    modifier = Modifier.size(12.dp),
+                    shape = CircleShape,
+                    color = brandColor
+                ) {}
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    title,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = brandColor
+                )
+            }
         },
         text = {
             Column(
@@ -334,6 +351,19 @@ private fun QrCodeDialog(resId: Int, title: String, onDismiss: () -> Unit) {
                     )
                 }
                 Spacer(Modifier.height(12.dp))
+                // 品牌色胶囊标签：微信绿 / 支付宝蓝，纯码外观相近时一眼可辨
+                Surface(
+                    shape = RoundedCornerShape(50),
+                    color = brandColor
+                ) {
+                    Text(
+                        brandLabel,
+                        color = Color.White,
+                        style = MaterialTheme.typography.labelMedium,
+                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 5.dp)
+                    )
+                }
+                Spacer(Modifier.height(10.dp))
                 Text(
                     stringResource(R.string.about_qr_hint),
                     style = MaterialTheme.typography.bodySmall,

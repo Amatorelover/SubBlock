@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
@@ -39,9 +40,8 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -70,6 +70,8 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import com.yanhu.subblock.AppLocale
 import com.yanhu.subblock.BuildConfig
 import com.yanhu.subblock.R
@@ -121,7 +123,7 @@ fun HomeScreen(
 
     var editingId by remember { mutableStateOf<String?>(null) }
     var showPresets by remember { mutableStateOf(false) }
-    var languageMenuExpanded by remember { mutableStateOf(false) }
+    var showLanguageDialog by remember { mutableStateOf(false) }
     // 刚从文件里解析出来、等待用户确认后才落库的配置
     var pendingImport by remember { mutableStateOf<ConfigIO.ImportResult.Success?>(null) }
 
@@ -203,38 +205,13 @@ fun HomeScreen(
         topBar = {
             TopAppBar(
                 // 语言切换放顶栏最左，与右侧「关于」左右对称，不占用正文空间。
-                // 切换后 MainActivity 会 recreate，下拉菜单会随界面一起消失。
+                // 点击弹出屏幕居中的对话框（样式对齐 SocialCrop），切换后 MainActivity 会 recreate。
                 navigationIcon = {
-                    Box {
-                        IconButton(onClick = { languageMenuExpanded = true }) {
-                            Icon(
-                                Icons.Filled.Language,
-                                contentDescription = stringResource(R.string.cd_language)
-                            )
-                        }
-                        DropdownMenu(
-                            expanded = languageMenuExpanded,
-                            onDismissRequest = { languageMenuExpanded = false }
-                        ) {
-                            AppLocale.choices.forEach { value ->
-                                DropdownMenuItem(
-                                    text = { Text(AppLocale.labelOf(context, value)) },
-                                    leadingIcon = {
-                                        if (value == language) {
-                                            Icon(
-                                                Icons.Filled.Check,
-                                                contentDescription = null,
-                                                modifier = Modifier.size(18.dp)
-                                            )
-                                        }
-                                    },
-                                    onClick = {
-                                        languageMenuExpanded = false
-                                        if (value != language) onLanguageChange(value)
-                                    }
-                                )
-                            }
-                        }
+                    IconButton(onClick = { showLanguageDialog = true }) {
+                        Icon(
+                            Icons.Filled.Language,
+                            contentDescription = stringResource(R.string.cd_language)
+                        )
                     }
                 },
                 title = { Text(stringResource(R.string.app_name), fontWeight = FontWeight.Medium) },
@@ -381,6 +358,17 @@ fun HomeScreen(
                 scope.launch { store.saveBlocks(incoming.blocks) }
                 pendingImport = null
                 toast(context.getString(R.string.toast_imported, incoming.blocks.size))
+            }
+        )
+    }
+
+    if (showLanguageDialog) {
+        LanguageDialog(
+            current = language,
+            onDismiss = { showLanguageDialog = false },
+            onSelect = { value ->
+                showLanguageDialog = false
+                if (value != language) onLanguageChange(value)
             }
         )
     }
@@ -761,6 +749,107 @@ private fun BackupCard(blockCount: Int, onExport: () -> Unit, onImport: () -> Un
                     Spacer(Modifier.width(6.dp))
                     Text(stringResource(R.string.backup_import))
                 }
+            }
+        }
+    }
+}
+
+/**
+ * 语言选择对话框 —— 样式对齐 SocialCrop 的 LanguageDialog：
+ * 屏幕居中的 28dp 圆角卡片、surfaceContainerHigh 底色、24sp 标题、
+ * 50dp 选项行、选中项圆形勾选、细分隔线、右对齐取消按钮。
+ * 相比原来锚在图标下的 DropdownMenu，卡片更大、位置固定在屏幕中央。
+ */
+@Composable
+private fun LanguageDialog(
+    current: String,
+    onDismiss: () -> Unit,
+    onSelect: (String) -> Unit
+) {
+    val context = LocalContext.current
+    val cs = MaterialTheme.colorScheme
+    Dialog(onDismissRequest = onDismiss) {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(28.dp))
+                .background(cs.surfaceContainerHigh)
+                .padding(vertical = 20.dp)
+        ) {
+            Text(
+                stringResource(R.string.language_title),
+                fontSize = 24.sp,
+                fontWeight = FontWeight.W500,
+                color = cs.onSurface,
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
+            )
+            val options = listOf(
+                AppLocale.SYSTEM to stringResource(R.string.language_system),
+                AppLocale.ZH to stringResource(R.string.language_zh),
+                AppLocale.EN to stringResource(R.string.language_en)
+            )
+            options.forEachIndexed { idx, (tag, label) ->
+                val selected = current == tag
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp)
+                        .clickable { onSelect(tag) }
+                        .padding(horizontal = 24.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        label,
+                        fontSize = 17.sp,
+                        color = cs.onSurface,
+                        modifier = Modifier.weight(1f)
+                    )
+                    if (selected) {
+                        Box(
+                            Modifier
+                                .size(24.dp)
+                                .clip(CircleShape)
+                                .background(cs.primaryContainer),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                Icons.Filled.Check,
+                                contentDescription = null,
+                                tint = cs.onPrimaryContainer,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    }
+                }
+                if (idx < options.lastIndex) {
+                    HorizontalDivider(
+                        color = cs.outlineVariant.copy(alpha = 0.45f),
+                        thickness = 0.5.dp,
+                        modifier = Modifier.padding(horizontal = 24.dp)
+                    )
+                }
+            }
+            Text(
+                stringResource(R.string.language_hint),
+                style = MaterialTheme.typography.bodySmall,
+                color = cs.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 10.dp)
+            )
+            Box(
+                Modifier
+                    .align(Alignment.End)
+                    .padding(horizontal = 16.dp, vertical = 4.dp)
+                    .clip(RoundedCornerShape(50))
+                    .clickable(onClick = onDismiss)
+                    .padding(horizontal = 16.dp, vertical = 10.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    stringResource(R.string.action_cancel),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.W500,
+                    color = cs.primary
+                )
             }
         }
     }

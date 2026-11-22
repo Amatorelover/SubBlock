@@ -202,10 +202,9 @@ fun HomeScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.app_name), fontWeight = FontWeight.Medium) },
-                actions = {
-                    // 语言切换收进顶栏：和「关于」并排，不占用正文空间。
-                    // 切换后 MainActivity 会 recreate，下拉菜单会随界面一起消失。
+                // 语言切换放顶栏最左，与右侧「关于」左右对称，不占用正文空间。
+                // 切换后 MainActivity 会 recreate，下拉菜单会随界面一起消失。
+                navigationIcon = {
                     Box {
                         IconButton(onClick = { languageMenuExpanded = true }) {
                             Icon(
@@ -237,6 +236,9 @@ fun HomeScreen(
                             }
                         }
                     }
+                },
+                title = { Text(stringResource(R.string.app_name), fontWeight = FontWeight.Medium) },
+                actions = {
                     IconButton(onClick = onOpenAbout) {
                         Icon(Icons.Filled.Info, contentDescription = stringResource(R.string.cd_about))
                     }
